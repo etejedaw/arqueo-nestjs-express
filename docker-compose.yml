@@ -1,0 +1,34 @@
+services:
+    postgres:
+        image: postgres:bookworm
+        restart: always
+        ports:
+            - 5432:5432
+        environment:
+            - POSTGRES_USER=root
+            - POSTGRES_PASSWORD=toor
+            - POSTGRES_DB=completr
+    postgres-test:
+        image: postgres:bookworm
+        restart: always
+        ports:
+            - 5433:5432
+        environment:
+            - POSTGRES_USER=root
+            - POSTGRES_PASSWORD=toor
+            - POSTGRES_DB=completr_test
+    pgadmin:
+        image: elestio/pgadmin
+        restart: unless-stopped
+        ports:
+            - 80:80
+        environment:
+            - PGADMIN_DEFAULT_EMAIL=root@postgres.com
+            - PGADMIN_DEFAULT_PASSWORD=toor
+            - PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED=False
+        volumes:
+            - ./.docker/pgadmin/servers.json:/pgadmin4/servers.json:ro
+            - ./.docker/pgadmin/pgpass:/pgpass:ro
+        depends_on:
+            - postgres
+            - postgres-test
