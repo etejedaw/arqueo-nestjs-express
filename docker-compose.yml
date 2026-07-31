@@ -7,7 +7,7 @@ services:
         environment:
             - POSTGRES_USER=root
             - POSTGRES_PASSWORD=toor
-            - POSTGRES_DB=completr
+            - POSTGRES_DB=arqueo
     postgres-test:
         image: postgres:bookworm
         restart: always
@@ -16,7 +16,7 @@ services:
         environment:
             - POSTGRES_USER=root
             - POSTGRES_PASSWORD=toor
-            - POSTGRES_DB=completr_test
+            - POSTGRES_DB=arqueo_test
     pgadmin:
         image: elestio/pgadmin
         restart: unless-stopped
