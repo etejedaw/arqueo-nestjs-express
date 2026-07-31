@@ -2,7 +2,7 @@
   "name": "arqueo-nestjs-express",
   "version": "0.0.1",
   "description": "",
-  "author": "",
+  "author": "Esteban Tejeda <contacto@etejeda.dev> (https://www.etejeda.dev)",
   "private": true,
   "license": "AGPL-3.0-only",
   "scripts": {
