@@ -23,7 +23,7 @@ export default registerAs("app", () => {
 	});
 
 	const errors = validateSync(appConfig);
-	if (errors.length > 0) throw new Error(`Invalid app config`);
+	if (errors.length > 0) throw new Error(`Invalid app env config`);
 
 	return {
 		nodeEnv: appConfig.NODE_ENV,

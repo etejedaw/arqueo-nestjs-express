@@ -44,7 +44,7 @@ export default registerAs("database", (): TypeOrmModuleOptions => {
 	});
 
 	const errors = validateSync(databaseConfig);
-	if (errors.length > 0) throw new Error(`Invalid database config`);
+	if (errors.length > 0) throw new Error(`Invalid database env config`);
 
 	return {
 		type: "postgres",
