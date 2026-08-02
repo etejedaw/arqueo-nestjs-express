@@ -5,13 +5,14 @@ import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import appConfig from "./config/app.config";
+import corsConfig from "./config/cors.config";
 import databaseConfig from "./config/database.config";
 import { UsersModule } from "./users/users.module";
 
 @Module({
 	imports: [
 		ConfigModule.forRoot({
-			load: [appConfig, databaseConfig]
+			load: [appConfig, corsConfig, databaseConfig]
 		}),
 		ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
 		TypeOrmModule.forRootAsync(databaseConfig.asProvider()),
