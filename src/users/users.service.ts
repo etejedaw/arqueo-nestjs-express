@@ -13,15 +13,18 @@ export class UsersService {
 		private readonly usersRepository: Repository<User>
 	) {}
 
-	create(createUserDto: CreateUserDto) {
-		return `This action adds a new user ${createUserDto.name}`;
+	async create(createUserDto: CreateUserDto): Promise<User> {
+		const user = this.usersRepository.create(createUserDto);
+		return this.findById(user.id);
 	}
 
-	findAll() {
-		return `This action returns all users`;
+	async findAll(): Promise<User[]> {
+		return await this.usersRepository.find({
+			where: { isActive: true }
+		});
 	}
 
-	async findOne(id: string) {
+	async findById(id: string): Promise<User> {
 		const user = await this.usersRepository.findOneBy({
 			id,
 			isActive: true
@@ -31,11 +34,27 @@ export class UsersService {
 		return user;
 	}
 
-	update(id: string, updateUserDto: UpdateUserDto) {
-		return `This action updates a #${id} user ${updateUserDto.name}`;
+	async findByEmail(email: string): Promise<User | null> {
+		return await this.usersRepository.findOneBy({ email, isActive: true });
 	}
 
-	remove(id: string) {
-		return `This action removes a #${id} user`;
+	async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+		const user = await this.findById(id);
+		this.usersRepository.merge(user, updateUserDto);
+		await this.usersRepository.save(user);
+
+		return this.findById(id);
+	}
+
+	async remove(id: string): Promise<void> {
+		await this.usersRepository.update(id, { isActive: false });
+	}
+
+	async reactivate(id: string): Promise<void> {
+		await this.usersRepository.update(id, { isActive: true });
+	}
+
+	async delete(id: string): Promise<void> {
+		await this.usersRepository.delete(id);
 	}
 }
