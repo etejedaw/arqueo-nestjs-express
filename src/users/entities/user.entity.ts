@@ -12,7 +12,8 @@ export class User {
 	@Column() declare name: string;
 	@Column({ unique: true }) declare email: string;
 	@Column() declare password: string;
-	@Column({ default: true }) declare isActive: boolean;
+	@Column({ type: "boolean", default: false }) declare isAdmin: boolean;
+	@Column({ type: "boolean", default: true }) declare isActive: boolean;
 	@CreateDateColumn({ type: "timestamptz" }) declare createdAt: Date;
 	@UpdateDateColumn({ type: "timestamptz" }) declare updatedAt: Date;
 }
