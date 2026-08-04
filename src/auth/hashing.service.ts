@@ -3,10 +3,10 @@ import * as bcrypt from "bcrypt";
 
 @Injectable()
 export class HashingService {
-	readonly #saltRounds = 12;
+	private readonly saltRounds = 12;
 
 	async hash(plain: string): Promise<string> {
-		return await bcrypt.hash(plain, this.#saltRounds);
+		return await bcrypt.hash(plain, this.saltRounds);
 	}
 
 	async verify(plain: string, hashed: string): Promise<boolean> {
