@@ -1,6 +1,5 @@
 import { Test } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { QueryFailedError } from "typeorm";
 
 import { CreateUserDto } from "../../src/users/dto/create-user.dto";
 import { User } from "../../src/users/entities/user.entity";
@@ -36,14 +35,6 @@ function buildOtherAdmin(): User {
 		email: "grace@arqueo.local",
 		isAdmin: true
 	});
-}
-
-function queryFailedError(code: string, constraint?: string): QueryFailedError {
-	const driverError = Object.assign(new Error("query failed"), {
-		code,
-		constraint
-	});
-	return new QueryFailedError("INSERT INTO users", [], driverError);
 }
 
 function createManagerMock() {
@@ -107,39 +98,46 @@ describe("UsersService", () => {
 			password: "hashed-password"
 		};
 
-		it("saves the user built from the input and returns the persisted entity", async () => {
+		it("saves the user when the email is free and returns the persisted entity", async () => {
 			const built = Object.assign(new User(), input);
 			const persisted = buildUser();
+			repository.findOne.mockResolvedValue(null);
 			repository.create.mockReturnValue(built);
 			repository.save.mockResolvedValue(persisted);
 
 			await expect(service.create(input)).resolves.toBe(persisted);
+			expect(repository.findOne).toHaveBeenCalledWith({
+				where: { email: input.email },
+				withDeleted: true
+			});
 			expect(repository.create).toHaveBeenCalledWith(input);
 			expect(repository.save).toHaveBeenCalledWith(built);
 		});
 
-		it("throws EmailAlreadyInUseError when the email violates its unique constraint", async () => {
-			repository.create.mockReturnValue(Object.assign(new User(), input));
-			repository.save.mockRejectedValue(
-				queryFailedError("23505", "uq_users_email")
-			);
+		it("throws EmailAlreadyInUseError without saving when an active user has the email", async () => {
+			repository.findOne.mockResolvedValue(buildUser());
 
 			const result = service.create(input);
 
 			await expect(result).rejects.toBeInstanceOf(EmailAlreadyInUseError);
 			await expect(result).rejects.toMatchObject({ email: input.email });
+			expect(repository.save).not.toHaveBeenCalled();
 		});
 
-		it("rethrows a unique violation on any other constraint untouched", async () => {
-			const error = queryFailedError("23505", "pk_users");
-			repository.create.mockReturnValue(Object.assign(new User(), input));
-			repository.save.mockRejectedValue(error);
+		it("throws EmailAlreadyInUseError without saving when a deactivated user has the email", async () => {
+			repository.findOne.mockResolvedValue(
+				buildUser({ deletedAt: TIMESTAMP })
+			);
 
-			await expect(service.create(input)).rejects.toBe(error);
+			await expect(service.create(input)).rejects.toBeInstanceOf(
+				EmailAlreadyInUseError
+			);
+			expect(repository.save).not.toHaveBeenCalled();
 		});
 
-		it("rethrows any other database error untouched", async () => {
-			const error = queryFailedError("23502");
+		it("rethrows any error from saving untouched", async () => {
+			const error = new Error("connection lost");
+			repository.findOne.mockResolvedValue(null);
 			repository.create.mockReturnValue(Object.assign(new User(), input));
 			repository.save.mockRejectedValue(error);
 

@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { EntityManager, Repository } from "typeorm";
 
-import { parseConstraintViolation } from "../database/postgres-errors";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
@@ -12,25 +11,24 @@ import {
 	UserNotFoundError
 } from "./users.errors";
 
-const WRITE_LOCK = { mode: "pessimistic_write" } as const;
-
 @Injectable()
 export class UsersService {
+	private readonly writeLock = { mode: "pessimistic_write" } as const;
+
 	constructor(
 		@InjectRepository(User)
 		private readonly usersRepository: Repository<User>
 	) {}
 
 	async create(createUserDto: CreateUserDto): Promise<User> {
+		const existing = await this.usersRepository.findOne({
+			where: { email: createUserDto.email },
+			withDeleted: true
+		});
+		if (existing) throw new EmailAlreadyInUseError(createUserDto.email);
+
 		const user = this.usersRepository.create(createUserDto);
-		try {
-			return await this.usersRepository.save(user);
-		} catch (error) {
-			const violation = parseConstraintViolation(error);
-			if (violation?.constraint === "uq_users_email")
-				throw new EmailAlreadyInUseError(createUserDto.email);
-			throw error;
-		}
+		return await this.usersRepository.save(user);
 	}
 
 	async findAll(): Promise<User[]> {
@@ -98,7 +96,7 @@ export class UsersService {
 		return await manager.find(User, {
 			where: { isAdmin: true },
 			order: { id: "ASC" },
-			lock: WRITE_LOCK
+			lock: this.writeLock
 		});
 	}
 
@@ -110,7 +108,7 @@ export class UsersService {
 		const user = await manager.findOne(User, {
 			where: { id },
 			withDeleted,
-			lock: WRITE_LOCK
+			lock: this.writeLock
 		});
 		if (!user) throw new UserNotFoundError(id);
 
