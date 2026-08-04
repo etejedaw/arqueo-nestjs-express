@@ -1,4 +1,4 @@
-import { ValidationPipe, VersioningType } from "@nestjs/common";
+import { ConsoleLogger, ValidationPipe, VersioningType } from "@nestjs/common";
 import { ConfigType } from "@nestjs/config";
 import { NestFactory } from "@nestjs/core";
 import cookieParser from "cookie-parser";
@@ -9,14 +9,23 @@ import appConfig from "./common/config/app.config";
 import corsConfig from "./common/config/cors.config";
 
 async function bootstrap() {
-	const app = await NestFactory.create(AppModule);
+	const app = await NestFactory.create(AppModule, { bufferLogs: true });
 
 	const config = app.get<ConfigType<typeof appConfig>>(appConfig.KEY);
 	const cors = app.get<ConfigType<typeof corsConfig>>(corsConfig.KEY);
 
+	app.useLogger(
+		new ConsoleLogger({
+			prefix: "Arqueo",
+			logLevels: config.logLevels,
+			colors: config.nodeEnv === "dev"
+		})
+	);
+
 	app.use(helmet());
 	app.use(cookieParser());
 	app.enableCors(cors);
+	app.setGlobalPrefix("api");
 	app.enableVersioning({ type: VersioningType.URI, defaultVersion: "1" });
 	app.enableShutdownHooks();
 

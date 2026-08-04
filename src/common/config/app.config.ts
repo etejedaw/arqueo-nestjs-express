@@ -1,9 +1,16 @@
+import { LogLevel } from "@nestjs/common";
 import { registerAs } from "@nestjs/config";
 import { Expose, plainToInstance, Type } from "class-transformer";
 import { IsIn, IsInt, validateSync } from "class-validator";
 
 const NODE_ENVIRONMENTS = ["dev", "prod", "test"] as const;
 type NodeEnvironments = (typeof NODE_ENVIRONMENTS)[number];
+
+const LOG_LEVELS: Record<NodeEnvironments, LogLevel[]> = {
+	dev: ["fatal", "error", "warn", "log", "debug", "verbose"],
+	prod: ["fatal", "error", "warn", "log"],
+	test: ["fatal", "error", "warn"]
+};
 
 class AppConfig {
 	@Expose()
@@ -28,6 +35,7 @@ export default registerAs("app", () => {
 
 	return {
 		nodeEnv: appConfig.NODE_ENV,
-		port: appConfig.PORT
+		port: appConfig.PORT,
+		logLevels: LOG_LEVELS[appConfig.NODE_ENV]
 	};
 });
