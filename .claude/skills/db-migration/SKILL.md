@@ -130,8 +130,9 @@ export class CreateStatementsTable1735660000000 implements MigrationInterface {
   el DDL **no necesita** ser idempotente como en Sequelize. Aun así, para migraciones escritas a
   mano sobre entornos ya poblados, `IF NOT EXISTS` / `IF EXISTS` es una red de seguridad válida.
 - **Montos en CLP**: enteros sin decimales → `bigint` (ver `CONTEXT.md`).
-- **UUID como PK**: `id uuid PRIMARY KEY DEFAULT gen_random_uuid()` (requiere la extensión
-  `pgcrypto`; crearla en la primera migración con `CREATE EXTENSION IF NOT EXISTS pgcrypto;`).
+- **UUID como PK**: `id uuid PRIMARY KEY DEFAULT gen_random_uuid()`. Es nativa desde Postgres 13,
+  así que **no** requiere `CREATE EXTENSION pgcrypto` en la migración (el proyecto usa
+  `uuidExtension: "pgcrypto"` solo para que TypeORM genere `gen_random_uuid()`).
 - **Timestamps**: `created_at`/`updated_at` como `TIMESTAMPTZ NOT NULL DEFAULT now()`.
 - **FKs**: `REFERENCES otra_tabla(id) ON DELETE CASCADE|SET NULL` según el modelo. Nombrar la
   constraint cuando importe el orden de borrado.
