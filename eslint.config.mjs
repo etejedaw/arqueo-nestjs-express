@@ -10,7 +10,8 @@ export default tseslint.config(
     ignores: ['eslint.config.mjs'],
   },
   eslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
+  ...tseslint.configs.strictTypeChecked,
+  ...tseslint.configs.stylisticTypeChecked,
   eslintPluginPrettierRecommended,
   {
     languageOptions: {
@@ -31,8 +32,33 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
-      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/no-extraneous-class': [
+        'error',
+        { allowWithDecorator: true },
+      ],
+      '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/no-unsafe-argument': 'warn',
+      '@typescript-eslint/prefer-nullish-coalescing': [
+        'error',
+        { ignorePrimitives: { string: true } },
+      ],
+      '@typescript-eslint/restrict-template-expressions': [
+        'error',
+        {
+          allowAny: false,
+          allowBoolean: false,
+          allowNever: false,
+          allowNullish: false,
+          allowNumber: true,
+          allowRegExp: false,
+        },
+      ],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { varsIgnorePattern: '^_', argsIgnorePattern: '^_' },
+      ],
+      eqeqeq: ['error', 'always'],
+      'no-console': 'error',
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'prettier/prettier': ['error', { endOfLine: 'auto' }],
