@@ -1,5 +1,3 @@
-import { join } from "node:path";
-
 import { registerAs } from "@nestjs/config";
 import { TypeOrmModuleOptions } from "@nestjs/typeorm";
 import { Expose, plainToInstance, Type } from "class-transformer";
@@ -11,6 +9,7 @@ import {
 	validateSync
 } from "class-validator";
 
+import { migrations } from "../../database/migrations";
 import { SnakeNamingStrategy } from "../../database/snake-naming.strategy";
 
 class DatabaseConfig {
@@ -58,10 +57,8 @@ export default registerAs("database", (): TypeOrmModuleOptions => {
 		username: databaseConfig.DB_USERNAME,
 		password: databaseConfig.DB_PASSWORD,
 		database: databaseConfig.DB_DATABASE,
-		entities: [join(__dirname, "..", "**", "*.entity{.ts,.js}")],
-		migrations: [
-			join(__dirname, "..", "database", "migrations", "*{.ts,.js}")
-		],
+		autoLoadEntities: true,
+		migrations,
 		namingStrategy: new SnakeNamingStrategy(),
 		synchronize: false,
 		migrationsRun: true
