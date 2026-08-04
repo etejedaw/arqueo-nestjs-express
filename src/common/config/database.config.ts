@@ -60,6 +60,7 @@ export default registerAs("database", (): TypeOrmModuleOptions => {
 		autoLoadEntities: true,
 		migrations,
 		namingStrategy: new SnakeNamingStrategy(),
+		uuidExtension: "pgcrypto",
 		synchronize: false,
 		migrationsRun: true
 	};

@@ -1,3 +1,7 @@
 import { MigrationInterface } from "typeorm";
 
-export const migrations: (new () => MigrationInterface)[] = [];
+import { CreateUsersTable1789444724360 } from "./1789444724360-CreateUsersTable";
+
+export const migrations: (new () => MigrationInterface)[] = [
+	CreateUsersTable1789444724360
+];
