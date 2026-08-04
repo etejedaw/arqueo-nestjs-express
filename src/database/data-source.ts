@@ -1,6 +1,6 @@
 import { DataSource, DataSourceOptions } from "typeorm";
 
-import databaseConfig from "../config/database.config";
+import databaseConfig from "../common/config/database.config";
 
 export default new DataSource({
 	...(databaseConfig() as DataSourceOptions),

@@ -5,9 +5,9 @@ import { ThrottlerGuard, ThrottlerModule } from "@nestjs/throttler";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
 import { AuthModule } from "./auth/auth.module";
-import appConfig from "./config/app.config";
-import corsConfig from "./config/cors.config";
-import databaseConfig from "./config/database.config";
+import appConfig from "./common/config/app.config";
+import corsConfig from "./common/config/cors.config";
+import databaseConfig from "./common/config/database.config";
 import { UsersModule } from "./users/users.module";
 
 @Module({

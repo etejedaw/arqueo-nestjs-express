@@ -5,8 +5,8 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 
 import { AppModule } from "./app.module";
-import appConfig from "./config/app.config";
-import corsConfig from "./config/cors.config";
+import appConfig from "./common/config/app.config";
+import corsConfig from "./common/config/cors.config";
 
 async function bootstrap() {
 	const app = await NestFactory.create(AppModule);
