@@ -1,6 +1,7 @@
 import {
 	Column,
 	CreateDateColumn,
+	DeleteDateColumn,
 	Entity,
 	PrimaryGeneratedColumn,
 	UpdateDateColumn
@@ -13,7 +14,7 @@ export class User {
 	@Column({ unique: true }) declare email: string;
 	@Column() declare password: string;
 	@Column({ type: "boolean", default: false }) declare isAdmin: boolean;
-	@Column({ type: "boolean", default: true }) declare isActive: boolean;
 	@CreateDateColumn({ type: "timestamptz" }) declare createdAt: Date;
 	@UpdateDateColumn({ type: "timestamptz" }) declare updatedAt: Date;
+	@DeleteDateColumn({ type: "timestamptz" }) declare deletedAt: Date | null;
 }

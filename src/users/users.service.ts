@@ -19,23 +19,18 @@ export class UsersService {
 	}
 
 	async findAll(): Promise<User[]> {
-		return await this.usersRepository.find({
-			where: { isActive: true }
-		});
+		return await this.usersRepository.find();
 	}
 
 	async findById(id: string): Promise<User> {
-		const user = await this.usersRepository.findOneBy({
-			id,
-			isActive: true
-		});
+		const user = await this.usersRepository.findOneBy({ id });
 		if (!user) throw new NotFoundException(`User ${id} not found`);
 
 		return user;
 	}
 
 	async findByEmail(email: string): Promise<User | null> {
-		return await this.usersRepository.findOneBy({ email, isActive: true });
+		return await this.usersRepository.findOneBy({ email });
 	}
 
 	async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
@@ -47,11 +42,11 @@ export class UsersService {
 	}
 
 	async remove(id: string): Promise<void> {
-		await this.usersRepository.update(id, { isActive: false });
+		await this.usersRepository.softDelete(id);
 	}
 
 	async reactivate(id: string): Promise<void> {
-		await this.usersRepository.update(id, { isActive: true });
+		await this.usersRepository.restore(id);
 	}
 
 	async delete(id: string): Promise<void> {
