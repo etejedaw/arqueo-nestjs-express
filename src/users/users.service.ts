@@ -32,7 +32,7 @@ export class UsersService {
 	}
 
 	async findAll(): Promise<User[]> {
-		return await this.usersRepository.find();
+		return await this.usersRepository.find({ withDeleted: true });
 	}
 
 	async findById(id: string): Promise<User> {
