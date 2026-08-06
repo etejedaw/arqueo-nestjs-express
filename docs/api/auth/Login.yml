@@ -1,0 +1,76 @@
+info:
+  name: Login
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://{{BASE_URL}}/auth/login
+  body:
+    type: json
+    data: |-
+      {
+        "email": "admin@arqueo.local",
+        "password": "Qx7mRt2kPw9nLz4v"
+      }
+  auth: none
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  # Login
+
+  Valida email y contraseña y devuelve la cuenta del usuario. No emite tokens
+  todavía.
+
+  **Auth:** public
+
+  ## Request body
+  ```json
+  {
+    "email": "ada@arqueo.local",
+    "password": "Qx7mRt2kPw9nLz4v"
+  }
+  ```
+
+  El email se recorta y se pasa a minúsculas en el DTO antes de validarse. El
+  `ValidationPipe` global corre con `whitelist` y `forbidNonWhitelisted`, así
+  que cualquier campo extra en el body hace fallar la request.
+
+  ## Response 200
+  ```json
+  {
+    "id": "<uuid>",
+    "name": "Ada Lovelace",
+    "email": "ada@arqueo.local",
+    "password": "$2b$12$<hash bcrypt>",
+    "isAdmin": false,
+    "createdAt": "2026-09-16T12:00:00.000Z",
+    "updatedAt": "2026-09-16T12:00:00.000Z",
+    "deletedAt": null
+  }
+  ```
+
+  Devuelve la entidad `User` cruda, sin envolver en `data`: el proyecto no
+  tiene interceptor de transformación. Incluye `password` (el hash bcrypt),
+  porque las entidades devuelven toda la data por decisión de proyecto y el
+  serializer que lo oculte todavía no existe.
+
+  Los usuarios desactivados (soft delete con `deletedAt`) no los encuentra
+  `findByEmail`, así que no pueden loguearse.
+
+  Si el email no existe, la request corta de inmediato; si existe, la
+  contraseña se compara contra el hash bcrypt almacenado. Los dos casos
+  devuelven el mismo error, pero no tardan lo mismo: un email registrado
+  cuesta un `bcrypt.compare` (~300 ms) y uno inexistente no. Esa diferencia
+  es observable desde afuera y permite enumerar qué correos tienen cuenta.
+
+  ## Errors
+  - `500 InvalidCredentialsError` — el email no corresponde a ningún usuario activo, o la contraseña no coincide. La respuesta es la misma en ambos casos, a propósito. Debería ser `401`, pero el filtro que traduce errores de dominio a HTTP (`src/common/errors`) todavía no existe y el error sale sin manejar.
+  - `400 BAD_REQUEST` — body inválido: email con formato incorrecto, `password` vacío o ausente, o campos extra no permitidos.
+  - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.

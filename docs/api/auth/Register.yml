@@ -1,0 +1,83 @@
+info:
+  name: Register
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://{{BASE_URL}}/auth/register
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Admin",
+        "email": "admin@arqueo.local",
+        "password": "Qx7mRt2kPw9nLz4v"
+      }
+  auth: none
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  # Register
+
+  Crea una cuenta de usuario y devuelve el registro creado. Hoy es público: no
+  exige autenticación ni rol de administrador.
+
+  **Auth:** public
+
+  ## Request body
+  ```json
+  {
+    "name": "Ada Lovelace",
+    "email": "ada@arqueo.local",
+    "password": "Qx7mRt2kPw9nLz4v",
+    "isAdmin": false
+  }
+  ```
+
+  `isAdmin` es opcional: el DTO lo declara con default `false` y ese default
+  sobrevive al `ValidationPipe`, así que omitirlo crea un usuario normal. El
+  `ValidationPipe` global corre con `whitelist` y `forbidNonWhitelisted`, así
+  que cualquier campo fuera de esos cuatro hace fallar la request.
+
+  La contraseña se hashea con bcrypt (cost 12) antes de guardarse. El body
+  viaja en claro, así que este endpoint exige TLS en cualquier despliegue real.
+
+  **Cuidado:** `isAdmin` se lee del body y el endpoint no tiene guard, así que
+  hoy cualquiera puede crear un administrador mandando `"isAdmin": true`.
+  Mientras `register` siga público, ese campo debería forzarse en el server en
+  vez de leerse del request.
+
+  El email se recorta y se pasa a minúsculas antes de validarse, con los
+  mismos decoradores que usa `Login` (`@Trim()` y `@ToLowerCase()`), así que
+  un alta con `Ada@Arqueo.local`, o con espacios alrededor, queda guardada
+  como `ada@arqueo.local` y después puede iniciar sesión.
+
+  ## Response 201
+  ```json
+  {
+    "id": "<uuid>",
+    "name": "Ada Lovelace",
+    "email": "ada@arqueo.local",
+    "password": "$2b$12$<hash bcrypt>",
+    "isAdmin": false,
+    "createdAt": "2026-09-16T12:00:00.000Z",
+    "updatedAt": "2026-09-16T12:00:00.000Z",
+    "deletedAt": null
+  }
+  ```
+
+  Devuelve la entidad `User` cruda, sin envolver en `data`, con el hash bcrypt
+  incluido: las entidades devuelven toda la data por decisión de proyecto y el
+  serializer que lo oculte todavía no existe.
+
+  ## Errors
+  - `500 EmailAlreadyInUseError` — ya existe un usuario con ese email, incluido uno desactivado: `UsersService.create` lo busca con `withDeleted`. Debería ser `409`, pero el filtro que traduce errores de dominio a HTTP (`src/common/errors`) todavía no existe y el error sale sin manejar.
+  - `400 BAD_REQUEST` — body inválido: `name` vacío, email con formato incorrecto, `password` ausente, `isAdmin` no booleano, o campos extra no permitidos.
+  - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.

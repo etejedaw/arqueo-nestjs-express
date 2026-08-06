@@ -1,0 +1,5 @@
+name: Develop
+variables:
+  - name: BASE_URL
+    value: localhost:3000/api/v1
+    description: ""
