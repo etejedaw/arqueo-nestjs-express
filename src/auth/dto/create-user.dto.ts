@@ -1,7 +1,11 @@
-import { IsEmail, IsNotEmpty, IsString } from "class-validator";
+import { IsBoolean, IsEmail, IsNotEmpty, IsString } from "class-validator";
+
+import { ToLowerCase } from "../../common/decorators/to-lower-case.decorator";
+import { Trim } from "../../common/decorators/trim.decorator";
 
 export class CreateUserDto {
 	@IsString() @IsNotEmpty() readonly name: string;
-	@IsEmail() readonly email: string;
+	@Trim() @ToLowerCase() @IsEmail() readonly email: string;
 	@IsString() readonly password: string;
+	@IsBoolean() readonly isAdmin: boolean = false;
 }
