@@ -6,6 +6,6 @@ import { Trim } from "../../common/decorators/trim.decorator";
 export class CreateUserDto {
 	@IsString() @IsNotEmpty() readonly name: string;
 	@Trim() @ToLowerCase() @IsEmail() readonly email: string;
-	@IsString() readonly password: string;
+	@IsString() @IsNotEmpty() readonly password: string;
 	@IsBoolean() readonly isAdmin: boolean = false;
 }
