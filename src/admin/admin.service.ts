@@ -4,6 +4,7 @@ import { HashingService } from "../auth/hashing.service";
 import { User } from "../users/entities/user.entity";
 import { UsersService } from "../users/users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
 import { GeneratePasswordService } from "./generate-password.service";
 
 export interface CreatedUser {
@@ -42,5 +43,29 @@ export class AdminService {
 		await this.usersService.updatePassword(id, hashPassword);
 
 		return password;
+	}
+
+	async findAllUsers(): Promise<User[]> {
+		return await this.usersService.findAll(false);
+	}
+
+	async findUser(id: string): Promise<User> {
+		return await this.usersService.findById(id, false);
+	}
+
+	async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {
+		return await this.usersService.update(id, updateUserDto);
+	}
+
+	async deactivateUser(id: string): Promise<boolean> {
+		return this.usersService.remove(id);
+	}
+
+	async activateUser(id: string): Promise<void> {
+		return this.usersService.reactivate(id);
+	}
+
+	async deleteUser(id: string): Promise<boolean> {
+		return this.usersService.delete(id);
 	}
 }
