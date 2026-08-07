@@ -1,11 +1,12 @@
 import {
+	ClassSerializerInterceptor,
 	ConsoleLogger,
 	HttpStatus,
 	ValidationPipe,
 	VersioningType
 } from "@nestjs/common";
 import { ConfigType } from "@nestjs/config";
-import { NestFactory } from "@nestjs/core";
+import { NestFactory, Reflector } from "@nestjs/core";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 
@@ -40,6 +41,11 @@ async function bootstrap() {
 			forbidNonWhitelisted: true,
 			transform: true,
 			errorHttpStatusCode: HttpStatus.UNPROCESSABLE_ENTITY
+		})
+	);
+	app.useGlobalInterceptors(
+		new ClassSerializerInterceptor(app.get(Reflector), {
+			excludeExtraneousValues: true
 		})
 	);
 
