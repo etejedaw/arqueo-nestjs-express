@@ -60,6 +60,11 @@ export class UsersService {
 		});
 	}
 
+	async updatePassword(id: string, password: string): Promise<void> {
+		await this.findById(id);
+		await this.usersRepository.update(id, { password });
+	}
+
 	async remove(id: string): Promise<void> {
 		await this.usersRepository.manager.transaction(async manager => {
 			const activeAdmins = await this.lockActiveAdmins(manager);
