@@ -6,11 +6,7 @@ import { UsersService } from "../users/users.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { GeneratePasswordService } from "./generate-password.service";
-
-export interface CreatedUser {
-	user: User;
-	password: string;
-}
+import { CreatedUser } from "./interfaces/created-user.interface";
 
 @Injectable()
 export class AdminService {
