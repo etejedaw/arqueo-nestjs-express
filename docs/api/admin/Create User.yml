@@ -1,0 +1,89 @@
+info:
+  name: Create User
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: https://{{BASE_URL}}/admin/users
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Ada Lovelace",
+        "email": "ada@arqueo.local",
+        "isAdmin": false
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  # Create User
+
+  Da de alta un usuario con una contraseña generada por el servidor y devuelve
+  el registro creado junto a esa contraseña en claro. Reemplaza a
+  `POST /auth/register`: no hay registro público, las cuentas las crea el
+  administrador desde el módulo `admin`.
+
+  **Auth:** public
+
+  Todavía no hay guard: el endpoint vive bajo `/admin` pero no exige sesión ni
+  rol. Hoy cualquiera puede crear cuentas, incluidas de administrador mandando
+  `"isAdmin": true`. Tiene que estar resuelto antes de cualquier despliegue.
+
+  ## Request body
+  ```json
+  {
+    "name": "Ada Lovelace",
+    "email": "ada@arqueo.local",
+    "isAdmin": false
+  }
+  ```
+
+  `isAdmin` es opcional: el DTO lo declara con default `false` y ese default
+  sobrevive al `ValidationPipe`, así que omitirlo crea un usuario normal. El
+  `ValidationPipe` global corre con `whitelist` y `forbidNonWhitelisted`, así
+  que cualquier campo fuera de esos tres hace fallar la request, incluido
+  `password`: la contraseña no se elige al dar de alta.
+
+  El email se recorta y se pasa a minúsculas en el DTO con `@Trim()` y
+  `@ToLowerCase()`, los mismos decoradores que usa `Login`, así que un alta con
+  `Ada@Arqueo.local`, o con espacios alrededor, queda guardada como
+  `ada@arqueo.local` y después puede iniciar sesión.
+
+  ## Response 201
+  ```json
+  {
+    "user": {
+      "id": "<uuid>",
+      "name": "Ada Lovelace",
+      "email": "ada@arqueo.local",
+      "password": "$2b$12$<hash bcrypt>",
+      "isAdmin": false,
+      "createdAt": "2026-09-16T12:00:00.000Z",
+      "updatedAt": "2026-09-16T12:00:00.000Z",
+      "deletedAt": null
+    },
+    "password": "9f3a0c7e"
+  }
+  ```
+
+  `password` es la contraseña generada, en claro: 8 caracteres hexadecimales
+  (`0-9a-f`). Solo se guarda su hash bcrypt (cost 12), así que esta respuesta
+  es la única vez que se puede ver; el administrador tiene que entregársela al
+  usuario. La respuesta viaja en claro, así que este endpoint exige TLS en
+  cualquier despliegue real.
+
+  `user` es la entidad `User` cruda, con el hash bcrypt incluido: las entidades
+  devuelven toda la data por decisión de proyecto y el serializer que lo oculte
+  todavía no existe. La respuesta no se envuelve en `data`.
+
+  ## Errors
+  - `500 EmailAlreadyInUseError` — ya existe un usuario con ese email, incluido uno desactivado: `UsersService.create` lo busca con `withDeleted`. Debería ser `409`, pero el filtro que traduce errores de dominio a HTTP (`src/common/errors`) todavía no existe y el error sale sin manejar.
+  - `400 BAD_REQUEST` — body inválido: `name` vacío, email con formato incorrecto, `isAdmin` no booleano, o campos extra no permitidos (incluido `password`).
+  - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.
