@@ -34,7 +34,6 @@ docs: |-
     "id": "<uuid>",
     "name": "Ada Lovelace",
     "email": "ada@arqueo.local",
-    "password": "$2b$12$<hash bcrypt>",
     "isAdmin": false,
     "createdAt": "2026-09-16T12:00:00.000Z",
     "updatedAt": "2026-09-16T12:00:00.000Z",
@@ -45,9 +44,8 @@ docs: |-
   Encuentra también a los desactivados (`UsersService.findById(id, false)`):
   se reconocen porque `deletedAt` no es `null`.
 
-  Devuelve la entidad `User` cruda, sin envolver en `data`, con el hash bcrypt
-  incluido: las entidades devuelven toda la data por decisión de proyecto y el
-  serializer que lo oculte todavía no existe.
+  La respuesta pasa por `@Serialize(UserResponse)`: salen todos los campos
+  salvo `password`, sin envolver en `data`.
 
   ## Errors
   - `400 BAD_REQUEST` — `id` no es un UUID válido (`Validation failed (uuid is expected)`).

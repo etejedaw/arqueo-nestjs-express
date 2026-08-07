@@ -33,7 +33,6 @@ docs: |-
       "id": "<uuid>",
       "name": "Ada Lovelace",
       "email": "ada@arqueo.local",
-      "password": "$2b$12$<hash bcrypt>",
       "isAdmin": false,
       "createdAt": "2026-09-16T12:00:00.000Z",
       "updatedAt": "2026-09-16T12:00:00.000Z",
@@ -43,7 +42,6 @@ docs: |-
       "id": "<uuid>",
       "name": "Grace Hopper",
       "email": "grace@arqueo.local",
-      "password": "$2b$12$<hash bcrypt>",
       "isAdmin": true,
       "createdAt": "2026-09-10T09:30:00.000Z",
       "updatedAt": "2026-09-15T18:00:00.000Z",
@@ -55,9 +53,8 @@ docs: |-
   Incluye a los desactivados (`UsersService.findAll(false)`): se reconocen
   porque `deletedAt` no es `null`. No hay paginación ni filtros.
 
-  Devuelve las entidades `User` crudas, sin envolver en `data`, con el hash
-  bcrypt incluido: las entidades devuelven toda la data por decisión de
-  proyecto y el serializer que lo oculte todavía no existe.
+  Cada usuario pasa por `@Serialize(UserResponse)`: salen todos los campos
+  salvo `password`, sin envolver en `data`.
 
   ## Errors
   - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.

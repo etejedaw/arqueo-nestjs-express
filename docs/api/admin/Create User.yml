@@ -10,8 +10,8 @@ http:
     type: json
     data: |-
       {
-        "name": "Ada Lovelace",
-        "email": "ada@arqueo.local",
+        "name": "Admin",
+        "email": "admin@arqueo.local",
         "isAdmin": false
       }
 
@@ -26,7 +26,7 @@ docs: |-
   # Create User
 
   Da de alta un usuario con una contraseña generada por el servidor y devuelve
-  el registro creado junto a esa contraseña en claro. Reemplaza a
+  sus datos junto a esa contraseña en claro. Reemplaza a
   `POST /auth/register`: no hay registro público, las cuentas las crea el
   administrador desde el módulo `admin`.
 
@@ -59,16 +59,9 @@ docs: |-
   ## Response 201
   ```json
   {
-    "user": {
-      "id": "<uuid>",
-      "name": "Ada Lovelace",
-      "email": "ada@arqueo.local",
-      "password": "$2b$12$<hash bcrypt>",
-      "isAdmin": false,
-      "createdAt": "2026-09-16T12:00:00.000Z",
-      "updatedAt": "2026-09-16T12:00:00.000Z",
-      "deletedAt": null
-    },
+    "id": "<uuid>",
+    "name": "Ada Lovelace",
+    "email": "ada@arqueo.local",
     "password": "9f3a0c7e"
   }
   ```
@@ -79,11 +72,11 @@ docs: |-
   usuario. La respuesta viaja en claro, así que este endpoint exige TLS en
   cualquier despliegue real.
 
-  `user` es la entidad `User` cruda, con el hash bcrypt incluido: las entidades
-  devuelven toda la data por decisión de proyecto y el serializer que lo oculte
-  todavía no existe. La respuesta no se envuelve en `data`.
+  La respuesta pasa por `@Serialize(CreatedUserResponseDto)`: solo salen
+  `id`, `name`, `email` y la contraseña generada. El hash bcrypt nunca sale. La
+  respuesta no se envuelve en `data`.
 
-  Guarda `user.id` en la variable `{{USER_ID}}` de la colección, que usan los
+  Guarda `id` en la variable `{{USER_ID}}` de la colección, que usan los
   demás endpoints de `admin`.
 
   ## Errors
