@@ -84,11 +84,9 @@ export class AdminController {
 		await this.adminService.activateUser(id);
 	}
 
+	@HttpCode(HttpStatus.NO_CONTENT)
 	@Delete(":id")
-	async deleteUser(
-		@Param("id", ParseUUIDPipe) id: string
-	): Promise<{ deleted: boolean }> {
-		const deleted = await this.adminService.deleteUser(id);
-		return { deleted };
+	async deleteUser(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
+		await this.adminService.deleteUser(id);
 	}
 }
