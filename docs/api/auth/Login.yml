@@ -70,6 +70,7 @@ docs: |-
   es observable desde afuera y permite enumerar qué correos tienen cuenta.
 
   ## Errors
-  - `500 InvalidCredentialsError` — el email no corresponde a ningún usuario activo, o la contraseña no coincide. La respuesta es la misma en ambos casos, a propósito. Debería ser `401`, pero el filtro que traduce errores de dominio a HTTP (`src/common/errors`) todavía no existe y el error sale sin manejar.
-  - `400 BAD_REQUEST` — body inválido: email con formato incorrecto, `password` vacío o ausente, o campos extra no permitidos.
+  - `401 InvalidCredentialsError` — el email no corresponde a ningún usuario activo, o la contraseña no coincide. La respuesta es la misma en ambos casos, a propósito.
+  - `400 BAD_REQUEST` — el body no es JSON válido; lo rechaza el body parser de Express antes de llegar al `ValidationPipe`.
+  - `422 UNPROCESSABLE_ENTITY` — body inválido según el DTO: email con formato incorrecto, `password` vacío o ausente, o campos extra no permitidos.
   - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.

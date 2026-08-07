@@ -80,8 +80,9 @@ docs: |-
 
   ## Errors
   - `400 BAD_REQUEST` — `id` no es un UUID válido (`Validation failed (uuid is expected)`).
-  - `400 BAD_REQUEST` — body inválido: `name` vacío, email con formato incorrecto, `isAdmin` no booleano, algún campo en `null`, o campos extra no permitidos (incluido `password`).
-  - `500 UserNotFoundError` — no existe ningún usuario activo con ese id; un usuario desactivado no se puede editar hasta reactivarlo. Debería ser `404`, pero el filtro que traduce errores de dominio a HTTP (`src/common/errors`) todavía no existe y el error sale sin manejar.
-  - `500 LastAdminError` — se manda `"isAdmin": false` para el único admin activo. Debería ser `409`, pero el filtro que traduce errores de dominio a HTTP (`src/common/errors`) todavía no existe y el error sale sin manejar.
-  - `500 QueryFailedError` — el email ya lo tiene otro usuario (incluido uno desactivado) y salta el unique de Postgres. `UsersService.update` todavía no valida el email antes de guardar como hace `create`; cuando lo haga debería ser `409 EmailAlreadyInUseError`.
+  - `400 BAD_REQUEST` — el body no es JSON válido; lo rechaza el body parser de Express antes de llegar al `ValidationPipe`.
+  - `422 UNPROCESSABLE_ENTITY` — body inválido según el DTO: `name` vacío, email con formato incorrecto, `isAdmin` no booleano, algún campo en `null`, o campos extra no permitidos (incluido `password`).
+  - `404 UserNotFoundError` — no existe ningún usuario activo con ese id; un usuario desactivado no se puede editar hasta reactivarlo.
+  - `409 LastAdminError` — se manda `"isAdmin": false` para el único admin activo.
+  - `409 EmailAlreadyInUseError` — el email nuevo ya lo tiene otro usuario, incluido uno desactivado: `UsersService.update` lo busca con `withDeleted` antes de guardar. Mandar el email que el usuario ya tiene no es un error.
   - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.

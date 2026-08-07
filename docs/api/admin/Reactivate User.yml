@@ -40,5 +40,5 @@ docs: |-
 
   ## Errors
   - `400 BAD_REQUEST` — `id` no es un UUID válido (`Validation failed (uuid is expected)`).
-  - `500 UserNotFoundError` — no existe ningún usuario con ese id, activo ni desactivado. Debería ser `404`, pero el filtro que traduce errores de dominio a HTTP (`src/common/errors`) todavía no existe y el error sale sin manejar.
+  - `404 UserNotFoundError` — no existe ningún usuario con ese id, activo ni desactivado.
   - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.
