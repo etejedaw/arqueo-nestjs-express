@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://{{BASE_URL}}/auth/login
+  url: https://{{BASE_URL}}/auth/login
   body:
     type: json
     data: |-
@@ -13,7 +13,6 @@ http:
         "email": "admin@arqueo.local",
         "password": "Qx7mRt2kPw9nLz4v"
       }
-  auth: none
 
 settings:
   encodeUrl: true
