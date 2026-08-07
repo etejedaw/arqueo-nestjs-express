@@ -11,30 +11,48 @@ import {
 	Post
 } from "@nestjs/common";
 
+import { Serialize } from "../common/decorators/serialize.decorator";
 import { User } from "../users/entities/user.entity";
-import { AdminService, CreatedUser } from "./admin.service";
+import { AdminService } from "./admin.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
+import { CreatedUserResponse } from "./responses/created-user.response";
+import { UserResponse } from "./responses/user.response";
 
 @Controller("admin/users")
 export class AdminController {
 	constructor(private readonly adminService: AdminService) {}
 
+	@Serialize(CreatedUserResponse)
 	@Post()
-	async create(@Body() createUserDto: CreateUserDto): Promise<CreatedUser> {
-		return await this.adminService.create(createUserDto);
+	async create(
+		@Body() createUserDto: CreateUserDto
+	): Promise<CreatedUserResponse> {
+		const { user, password } =
+			await this.adminService.create(createUserDto);
+
+		return {
+			id: user.id,
+			name: user.name,
+			email: user.email,
+			isAdmin: user.isAdmin,
+			password
+		};
 	}
 
+	@Serialize(UserResponse)
 	@Get()
 	async findAll(): Promise<User[]> {
 		return await this.adminService.findAllUsers();
 	}
 
+	@Serialize(UserResponse)
 	@Get(":id")
 	async findUser(@Param("id", ParseUUIDPipe) id: string): Promise<User> {
 		return await this.adminService.findUser(id);
 	}
 
+	@Serialize(UserResponse)
 	@Patch(":id")
 	async updateUser(
 		@Param("id", ParseUUIDPipe) id: string,
@@ -52,12 +70,12 @@ export class AdminController {
 		return { password };
 	}
 
+	@HttpCode(HttpStatus.NO_CONTENT)
 	@Patch(":id/deactivate")
 	async deactivateUser(
 		@Param("id", ParseUUIDPipe) id: string
-	): Promise<{ deactivated: boolean }> {
-		const deactivated = await this.adminService.deactivateUser(id);
-		return { deactivated };
+	): Promise<void> {
+		await this.adminService.deactivateUser(id);
 	}
 
 	@HttpCode(HttpStatus.NO_CONTENT)
