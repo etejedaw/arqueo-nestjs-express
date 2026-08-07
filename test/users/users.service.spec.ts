@@ -280,6 +280,55 @@ describe("UsersService", () => {
 			).rejects.toBeInstanceOf(UserNotFoundError);
 			expect(manager.save).not.toHaveBeenCalled();
 		});
+
+		it("changes the email when no other user has it", async () => {
+			const user = buildUser();
+			manager.find.mockResolvedValue([buildOtherAdmin()]);
+			manager.findOne
+				.mockResolvedValueOnce(user)
+				.mockResolvedValueOnce(null)
+				.mockResolvedValueOnce(user);
+
+			await service.update(USER_ID, { email: "ada.king@arqueo.local" });
+
+			expect(manager.findOne).toHaveBeenNthCalledWith(2, User, {
+				where: { email: "ada.king@arqueo.local" },
+				withDeleted: true
+			});
+			expect(manager.save).toHaveBeenCalledWith(user);
+		});
+
+		it("throws EmailAlreadyInUseError without saving when another user, even a deactivated one, has the email", async () => {
+			const user = buildUser();
+			manager.find.mockResolvedValue([buildOtherAdmin()]);
+			manager.findOne.mockResolvedValueOnce(user).mockResolvedValueOnce(
+				buildUser({
+					id: OTHER_ADMIN_ID,
+					email: "grace@arqueo.local",
+					deletedAt: TIMESTAMP
+				})
+			);
+
+			const result = service.update(USER_ID, {
+				email: "grace@arqueo.local"
+			});
+
+			await expect(result).rejects.toBeInstanceOf(EmailAlreadyInUseError);
+			await expect(result).rejects.toMatchObject({
+				email: "grace@arqueo.local"
+			});
+			expect(manager.save).not.toHaveBeenCalled();
+		});
+
+		it("does not look up the email when it is the user's current one", async () => {
+			const user = buildUser();
+			givenLockedRows([buildOtherAdmin()], user);
+
+			await service.update(USER_ID, { email: "ada@arqueo.local" });
+
+			expect(manager.findOne).toHaveBeenCalledTimes(2);
+			expect(manager.save).toHaveBeenCalledWith(user);
+		});
 	});
 
 	describe("updatePassword", () => {

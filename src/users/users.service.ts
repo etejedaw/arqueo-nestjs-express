@@ -53,6 +53,14 @@ export class UsersService {
 		return await this.usersRepository.manager.transaction(async manager => {
 			const activeAdmins = await this.lockActiveAdmins(manager);
 			const user = await this.lockUser(manager, id, false);
+			if (updateUserDto.email && updateUserDto.email !== user.email) {
+				const existing = await manager.findOne(User, {
+					where: { email: updateUserDto.email },
+					withDeleted: true
+				});
+				if (existing)
+					throw new EmailAlreadyInUseError(updateUserDto.email);
+			}
 			if (updateUserDto.isAdmin === false)
 				this.assertAnotherAdminRemains(activeAdmins, user);
 
