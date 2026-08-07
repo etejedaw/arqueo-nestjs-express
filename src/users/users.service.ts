@@ -31,12 +31,15 @@ export class UsersService {
 		return await this.usersRepository.save(user);
 	}
 
-	async findAll(): Promise<User[]> {
-		return await this.usersRepository.find({ withDeleted: true });
+	async findAll(isActive: boolean): Promise<User[]> {
+		return await this.usersRepository.find({ withDeleted: !isActive });
 	}
 
-	async findById(id: string): Promise<User> {
-		const user = await this.usersRepository.findOneBy({ id });
+	async findById(id: string, isActive: boolean): Promise<User> {
+		const user = await this.usersRepository.findOne({
+			where: { id },
+			withDeleted: !isActive
+		});
 		if (!user) throw new UserNotFoundError(id);
 
 		return user;
@@ -61,18 +64,20 @@ export class UsersService {
 	}
 
 	async updatePassword(id: string, password: string): Promise<void> {
-		await this.findById(id);
+		await this.findById(id, true);
 		await this.usersRepository.update(id, { password });
 	}
 
-	async remove(id: string): Promise<void> {
-		await this.usersRepository.manager.transaction(async manager => {
+	async remove(id: string): Promise<boolean> {
+		return await this.usersRepository.manager.transaction(async manager => {
 			const activeAdmins = await this.lockActiveAdmins(manager);
 			const user = await this.lockUser(manager, id, true);
-			if (user.deletedAt) return;
+			if (user.deletedAt) return false;
 
 			this.assertAnotherAdminRemains(activeAdmins, user);
 			await manager.softDelete(User, id);
+
+			return true;
 		});
 	}
 
@@ -87,13 +92,15 @@ export class UsersService {
 		await this.usersRepository.restore(id);
 	}
 
-	async delete(id: string): Promise<void> {
-		await this.usersRepository.manager.transaction(async manager => {
+	async delete(id: string): Promise<boolean> {
+		return await this.usersRepository.manager.transaction(async manager => {
 			const activeAdmins = await this.lockActiveAdmins(manager);
 			const user = await this.lockUser(manager, id, true);
 
 			this.assertAnotherAdminRemains(activeAdmins, user);
-			await manager.delete(User, id);
+			const result = await manager.delete(User, id);
+
+			return (result.affected ?? 0) > 0;
 		});
 	}
 

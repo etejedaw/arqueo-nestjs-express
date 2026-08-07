@@ -44,7 +44,7 @@ function createManagerMock() {
 		merge: jest.fn(),
 		save: jest.fn(),
 		softDelete: jest.fn(),
-		delete: jest.fn()
+		delete: jest.fn().mockResolvedValue({ raw: [], affected: 1 })
 	};
 }
 
@@ -58,6 +58,7 @@ function createRepositoryMock(manager: ManagerMock) {
 		findOne: jest.fn(),
 		findOneBy: jest.fn(),
 		restore: jest.fn(),
+		update: jest.fn(),
 		manager: {
 			transaction: jest.fn(
 				(work: (entityManager: ManagerMock) => Promise<unknown>) =>
@@ -146,27 +147,52 @@ describe("UsersService", () => {
 	});
 
 	describe("findAll", () => {
-		it("returns every user from the repository", async () => {
+		it("returns only the active users when isActive is true", async () => {
 			const users = [buildUser(), buildOtherAdmin()];
 			repository.find.mockResolvedValue(users);
 
-			await expect(service.findAll()).resolves.toBe(users);
+			await expect(service.findAll(true)).resolves.toBe(users);
+			expect(repository.find).toHaveBeenCalledWith({
+				withDeleted: false
+			});
+		});
+
+		it("includes the deactivated users when isActive is false", async () => {
+			const users = [buildUser(), buildOtherAdmin()];
+			repository.find.mockResolvedValue(users);
+
+			await expect(service.findAll(false)).resolves.toBe(users);
+			expect(repository.find).toHaveBeenCalledWith({ withDeleted: true });
 		});
 	});
 
 	describe("findById", () => {
-		it("returns the user with the given id", async () => {
+		it("looks only among the active users when isActive is true", async () => {
 			const user = buildUser();
-			repository.findOneBy.mockResolvedValue(user);
+			repository.findOne.mockResolvedValue(user);
 
-			await expect(service.findById(USER_ID)).resolves.toBe(user);
-			expect(repository.findOneBy).toHaveBeenCalledWith({ id: USER_ID });
+			await expect(service.findById(USER_ID, true)).resolves.toBe(user);
+			expect(repository.findOne).toHaveBeenCalledWith({
+				where: { id: USER_ID },
+				withDeleted: false
+			});
+		});
+
+		it("also finds a deactivated user when isActive is false", async () => {
+			const user = buildUser({ deletedAt: TIMESTAMP });
+			repository.findOne.mockResolvedValue(user);
+
+			await expect(service.findById(USER_ID, false)).resolves.toBe(user);
+			expect(repository.findOne).toHaveBeenCalledWith({
+				where: { id: USER_ID },
+				withDeleted: true
+			});
 		});
 
 		it("throws UserNotFoundError when no user has the given id", async () => {
-			repository.findOneBy.mockResolvedValue(null);
+			repository.findOne.mockResolvedValue(null);
 
-			const result = service.findById(USER_ID);
+			const result = service.findById(USER_ID, false);
 
 			await expect(result).rejects.toBeInstanceOf(UserNotFoundError);
 			await expect(result).rejects.toMatchObject({ userId: USER_ID });
@@ -256,6 +282,31 @@ describe("UsersService", () => {
 		});
 	});
 
+	describe("updatePassword", () => {
+		it("replaces the password of an active user with the given hash", async () => {
+			repository.findOne.mockResolvedValue(buildUser());
+
+			await service.updatePassword(USER_ID, "new-hashed-password");
+
+			expect(repository.findOne).toHaveBeenCalledWith({
+				where: { id: USER_ID },
+				withDeleted: false
+			});
+			expect(repository.update).toHaveBeenCalledWith(USER_ID, {
+				password: "new-hashed-password"
+			});
+		});
+
+		it("throws UserNotFoundError without updating when the user does not exist or is deactivated", async () => {
+			repository.findOne.mockResolvedValue(null);
+
+			await expect(
+				service.updatePassword(USER_ID, "new-hashed-password")
+			).rejects.toBeInstanceOf(UserNotFoundError);
+			expect(repository.update).not.toHaveBeenCalled();
+		});
+	});
+
 	describe("remove", () => {
 		it("locks the active admins before the user, inside a transaction", async () => {
 			givenLockedRows([buildOtherAdmin()], buildUser());
@@ -278,11 +329,10 @@ describe("UsersService", () => {
 			);
 		});
 
-		it("soft deletes a regular user", async () => {
+		it("soft deletes a regular user and returns true", async () => {
 			givenLockedRows([buildOtherAdmin()], buildUser());
 
-			await service.remove(USER_ID);
-
+			await expect(service.remove(USER_ID)).resolves.toBe(true);
 			expect(manager.softDelete).toHaveBeenCalledWith(User, USER_ID);
 		});
 
@@ -290,8 +340,7 @@ describe("UsersService", () => {
 			const user = buildUser({ isAdmin: true });
 			givenLockedRows([user, buildOtherAdmin()], user);
 
-			await service.remove(USER_ID);
-
+			await expect(service.remove(USER_ID)).resolves.toBe(true);
 			expect(manager.softDelete).toHaveBeenCalledWith(User, USER_ID);
 		});
 
@@ -305,14 +354,13 @@ describe("UsersService", () => {
 			expect(manager.softDelete).not.toHaveBeenCalled();
 		});
 
-		it("does nothing when the user is already deactivated", async () => {
+		it("does nothing and returns false when the user is already deactivated", async () => {
 			givenLockedRows(
 				[buildOtherAdmin()],
 				buildUser({ deletedAt: TIMESTAMP })
 			);
 
-			await service.remove(USER_ID);
-
+			await expect(service.remove(USER_ID)).resolves.toBe(false);
 			expect(manager.softDelete).not.toHaveBeenCalled();
 		});
 
@@ -360,11 +408,10 @@ describe("UsersService", () => {
 	});
 
 	describe("delete", () => {
-		it("hard deletes a regular user", async () => {
+		it("hard deletes a regular user and returns true", async () => {
 			givenLockedRows([buildOtherAdmin()], buildUser());
 
-			await service.delete(USER_ID);
-
+			await expect(service.delete(USER_ID)).resolves.toBe(true);
 			expect(manager.delete).toHaveBeenCalledWith(User, USER_ID);
 		});
 
@@ -374,9 +421,22 @@ describe("UsersService", () => {
 				buildUser({ isAdmin: true, deletedAt: TIMESTAMP })
 			);
 
-			await service.delete(USER_ID);
-
+			await expect(service.delete(USER_ID)).resolves.toBe(true);
 			expect(manager.delete).toHaveBeenCalledWith(User, USER_ID);
+		});
+
+		it("returns false when the database reports no deleted rows", async () => {
+			givenLockedRows([buildOtherAdmin()], buildUser());
+			manager.delete.mockResolvedValue({ raw: [], affected: 0 });
+
+			await expect(service.delete(USER_ID)).resolves.toBe(false);
+		});
+
+		it("returns false when the database does not report the affected rows", async () => {
+			givenLockedRows([buildOtherAdmin()], buildUser());
+			manager.delete.mockResolvedValue({ raw: [] });
+
+			await expect(service.delete(USER_ID)).resolves.toBe(false);
 		});
 
 		it("throws LastAdminError when the user is the only active admin", async () => {
