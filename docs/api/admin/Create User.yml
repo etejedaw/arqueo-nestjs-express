@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: https://{{BASE_URL}}/admin/users
+  url: "{{BASE_URL}}/admin/users"
   body:
     type: json
     data: |-
@@ -14,6 +14,11 @@ http:
         "email": "ada@arqueo.local",
         "isAdmin": false
       }
+
+runtime:
+  scripts:
+    - type: after-response
+      code: bru.setVar("USER_ID", res.body.user.id)
 
 settings:
   encodeUrl: true
@@ -45,8 +50,8 @@ docs: |-
   }
   ```
 
-  `isAdmin` es opcional: el DTO lo declara con default `false` y ese default
-  sobrevive al `ValidationPipe`, así que omitirlo crea un usuario normal. El
+  Los tres campos son obligatorios, incluido `isAdmin`: el rol se decide
+  explícitamente en cada alta, no hay un valor por defecto. El
   `ValidationPipe` global corre con `whitelist` y `forbidNonWhitelisted`, así
   que cualquier campo fuera de esos tres hace fallar la request, incluido
   `password`: la contraseña no se elige al dar de alta.
@@ -83,7 +88,10 @@ docs: |-
   devuelven toda la data por decisión de proyecto y el serializer que lo oculte
   todavía no existe. La respuesta no se envuelve en `data`.
 
+  Guarda `user.id` en la variable `{{USER_ID}}` de la colección, que usan los
+  demás endpoints de `admin`.
+
   ## Errors
   - `500 EmailAlreadyInUseError` — ya existe un usuario con ese email, incluido uno desactivado: `UsersService.create` lo busca con `withDeleted`. Debería ser `409`, pero el filtro que traduce errores de dominio a HTTP (`src/common/errors`) todavía no existe y el error sale sin manejar.
-  - `400 BAD_REQUEST` — body inválido: `name` vacío, email con formato incorrecto, `isAdmin` no booleano, o campos extra no permitidos (incluido `password`).
+  - `400 BAD_REQUEST` — body inválido: `name` vacío, email con formato incorrecto, `isAdmin` ausente o no booleano, o campos extra no permitidos (incluido `password`).
   - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.

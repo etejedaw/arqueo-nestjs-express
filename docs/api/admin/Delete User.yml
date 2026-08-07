@@ -1,0 +1,52 @@
+info:
+  name: Delete User
+  type: http
+  seq: 8
+
+http:
+  method: DELETE
+  url: "{{BASE_URL}}/admin/users/{{USER_ID}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  # Delete User
+
+  Borra definitivamente a un usuario, activo o desactivado. No se puede
+  deshacer: para una baja reversible está `Deactivate User`.
+
+  **Auth:** public
+
+  Todavía no hay guard: el endpoint vive bajo `/admin` pero no exige sesión ni
+  rol, así que hoy cualquiera puede llamarlo. Tiene que estar resuelto antes de
+  cualquier despliegue.
+
+  ## Path params
+  - `id` (uuid) — id del usuario. `ParseUUIDPipe` lo valida antes de llegar al service; acepta UUID v3, v4, v5 y v7. En la colección es `{{USER_ID}}`, que setea `Create User` al crear un usuario.
+
+  ## Response 200
+  ```json
+  {
+    "deleted": true
+  }
+  ```
+
+  `deleted` es `true` cuando la fila se borró. En la práctica siempre es
+  `true`: si el usuario no existe o es el último admin activo, la request falla
+  antes de borrar.
+
+  Corre dentro de una transacción que bloquea primero a los admins activos y
+  después al usuario, para aplicar la regla de que siempre quede al menos un
+  admin. Un admin desactivado se puede borrar aunque quede un solo
+  admin activo, porque no cuenta para la regla.
+
+  ## Errors
+  - `400 BAD_REQUEST` — `id` no es un UUID válido (`Validation failed (uuid is expected)`).
+  - `500 UserNotFoundError` — no existe ningún usuario con ese id, activo ni desactivado. Debería ser `404`, pero el filtro que traduce errores de dominio a HTTP (`src/common/errors`) todavía no existe y el error sale sin manejar.
+  - `500 LastAdminError` — el usuario es el único admin activo. Debería ser `409`, pero el filtro que traduce errores de dominio a HTTP (`src/common/errors`) todavía no existe y el error sale sin manejar.
+  - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.

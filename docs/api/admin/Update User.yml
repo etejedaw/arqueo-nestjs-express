@@ -1,0 +1,87 @@
+info:
+  name: Update User
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{BASE_URL}}/admin/users/{{USER_ID}}"
+  body:
+    type: json
+    data: |-
+      {
+        "name": "Ada King",
+        "email": "ada.king@arqueo.local",
+        "isAdmin": true
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  # Update User
+
+  Edita el nombre, el email o el rol de un usuario activo. Es un update
+  parcial: todos los campos del body son opcionales y solo se cambian los que
+  vienen.
+
+  **Auth:** public
+
+  Todavía no hay guard: el endpoint vive bajo `/admin` pero no exige sesión ni
+  rol, así que hoy cualquiera puede llamarlo. Tiene que estar resuelto antes de
+  cualquier despliegue.
+
+  ## Path params
+  - `id` (uuid) — id del usuario. `ParseUUIDPipe` lo valida antes de llegar al service; acepta UUID v3, v4, v5 y v7. En la colección es `{{USER_ID}}`, que setea `Create User` al crear un usuario.
+
+  ## Request body
+  ```json
+  {
+    "name": "Ada King",
+    "email": "ada.king@arqueo.local",
+    "isAdmin": true
+  }
+  ```
+
+  `UpdateUserDto` es `PartialType(CreateUserDto)` con
+  `skipNullProperties: false`: un campo ausente no se toca, pero un campo
+  enviado con `null` falla la validación. El email se recorta y se pasa a
+  minúsculas con `@Trim()` y `@ToLowerCase()`, igual que en el alta. La
+  contraseña no se edita por aquí: mandar `password` hace fallar la request
+  (`whitelist` + `forbidNonWhitelisted`); para eso está `Reset Password`.
+
+  Un body vacío (`{}`) es válido y devuelve el usuario sin cambios.
+
+  ## Response 200
+  ```json
+  {
+    "id": "<uuid>",
+    "name": "Ada King",
+    "email": "ada.king@arqueo.local",
+    "password": "$2b$12$<hash bcrypt>",
+    "isAdmin": true,
+    "createdAt": "2026-09-16T12:00:00.000Z",
+    "updatedAt": "2026-09-16T12:30:00.000Z",
+    "deletedAt": null
+  }
+  ```
+
+  Devuelve el usuario recargado después de guardar. Corre dentro de una transacción que bloquea primero a los admins activos y
+  después al usuario, para aplicar la regla de que siempre quede al menos un
+  admin.
+
+  Devuelve la entidad `User` cruda, sin envolver en `data`, con el hash bcrypt
+  incluido: las entidades devuelven toda la data por decisión de proyecto y el
+  serializer que lo oculte todavía no existe.
+
+  ## Errors
+  - `400 BAD_REQUEST` — `id` no es un UUID válido (`Validation failed (uuid is expected)`).
+  - `400 BAD_REQUEST` — body inválido: `name` vacío, email con formato incorrecto, `isAdmin` no booleano, algún campo en `null`, o campos extra no permitidos (incluido `password`).
+  - `500 UserNotFoundError` — no existe ningún usuario activo con ese id; un usuario desactivado no se puede editar hasta reactivarlo. Debería ser `404`, pero el filtro que traduce errores de dominio a HTTP (`src/common/errors`) todavía no existe y el error sale sin manejar.
+  - `500 LastAdminError` — se manda `"isAdmin": false` para el único admin activo. Debería ser `409`, pero el filtro que traduce errores de dominio a HTTP (`src/common/errors`) todavía no existe y el error sale sin manejar.
+  - `500 QueryFailedError` — el email ya lo tiene otro usuario (incluido uno desactivado) y salta el unique de Postgres. `UsersService.update` todavía no valida el email antes de guardar como hace `create`; cuando lo haga debería ser `409 EmailAlreadyInUseError`.
+  - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.
