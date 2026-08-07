@@ -1,3 +1,7 @@
+import { ConflictException, NotFoundException } from "@nestjs/common";
+
+import { createErrorsFilter } from "../common/filters/create-errors-filter";
+
 export class UserNotFoundError extends Error {
 	constructor(readonly userId: string) {
 		super(`User ${userId} not found`);
@@ -18,3 +22,9 @@ export class LastAdminError extends Error {
 		this.name = "LastAdminError";
 	}
 }
+
+export const UsersErrorsFilter = createErrorsFilter([
+	[UserNotFoundError, NotFoundException],
+	[EmailAlreadyInUseError, ConflictException],
+	[LastAdminError, ConflictException]
+]);
