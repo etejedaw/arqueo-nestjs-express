@@ -35,8 +35,8 @@ docs: |-
   Sin body.
 
   Responde `204` tanto si el usuario estaba desactivado y se reactivó (se
-  limpia `deletedAt`) como si ya estaba activo, en cuyo caso no se hace nada.
-  A diferencia de `Deactivate User`, la respuesta no indica si hubo cambio.
+  limpia `deletedAt`) como si ya estaba activo, en cuyo caso no se hace nada. La
+  respuesta no indica si hubo cambio.
 
   ## Errors
   - `400 BAD_REQUEST` — `id` no es un UUID válido (`Validation failed (uuid is expected)`).

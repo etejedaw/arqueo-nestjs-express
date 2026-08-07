@@ -31,15 +31,12 @@ docs: |-
 
   No lleva body.
 
-  ## Response 200
-  ```json
-  {
-    "deactivated": true
-  }
-  ```
+  ## Response 204
+  Sin body.
 
-  - `true` — el usuario estaba activo y se desactivó (se completa `deletedAt`).
-  - `false` — el usuario ya estaba desactivado; no se hace nada.
+  Responde `204` tanto si el usuario estaba activo y se desactivó (se completa
+  `deletedAt`) como si ya estaba desactivado, en cuyo caso no se hace nada. La
+  respuesta no indica si hubo cambio.
 
   Corre dentro de una transacción que bloquea primero a los admins activos y
   después al usuario, para aplicar la regla de que siempre quede al menos un

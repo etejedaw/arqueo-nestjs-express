@@ -34,16 +34,12 @@ docs: |-
   ## Path params
   - `id` (uuid) — id del usuario. `ParseUUIDPipe` lo valida antes de llegar al service; acepta UUID v3, v4, v5 y v7. En la colección es `{{USER_ID}}`, que setea `Create User` al crear un usuario.
 
-  ## Response 200
-  ```json
-  {
-    "deleted": true
-  }
-  ```
+  ## Response 204
+  Sin body.
 
-  `deleted` es `true` cuando la fila se borró. En la práctica siempre es
-  `true`: si el usuario no existe o es el último admin activo, la request falla
-  antes de borrar.
+  Si el usuario no existe o es el único admin activo, la request falla antes de
+  borrar y responde el error correspondiente, así que un `204` significa
+  siempre que la fila se borró.
 
   Corre dentro de una transacción que bloquea primero a los admins activos y
   después al usuario, para aplicar la regla de que siempre quede al menos un
