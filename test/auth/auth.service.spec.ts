@@ -1,3 +1,4 @@
+import { JwtService } from "@nestjs/jwt";
 import { Test } from "@nestjs/testing";
 
 import { InvalidCredentialsError } from "../../src/auth/auth.errors";
@@ -9,6 +10,7 @@ import { UsersService } from "../../src/users/users.service";
 const USER_ID = "3f1c2a9e-6b1d-4c3e-9a7f-2d5e8b0c4a11";
 const TIMESTAMP = new Date("2026-09-01T12:00:00.000Z");
 const HASHED_PASSWORD = "$2b$12$hashed";
+const ACCESS_TOKEN = "header.payload.signature";
 
 const CREDENTIALS = {
 	email: "ada@arqueo.local",
@@ -33,6 +35,7 @@ describe("AuthService", () => {
 	let service: AuthService;
 	let usersService: { findByEmail: jest.Mock };
 	let hashingService: { hash: jest.Mock; verify: jest.Mock };
+	let jwtService: { signAsync: jest.Mock };
 
 	beforeEach(async () => {
 		usersService = { findByEmail: jest.fn() };
@@ -40,12 +43,14 @@ describe("AuthService", () => {
 			hash: jest.fn().mockResolvedValue(HASHED_PASSWORD),
 			verify: jest.fn()
 		};
+		jwtService = { signAsync: jest.fn().mockResolvedValue(ACCESS_TOKEN) };
 
 		const moduleRef = await Test.createTestingModule({
 			providers: [
 				AuthService,
 				{ provide: UsersService, useValue: usersService },
-				{ provide: HashingService, useValue: hashingService }
+				{ provide: HashingService, useValue: hashingService },
+				{ provide: JwtService, useValue: jwtService }
 			]
 		}).compile();
 
@@ -53,15 +58,25 @@ describe("AuthService", () => {
 	});
 
 	describe("login", () => {
-		it("returns the user when the credentials are valid", async () => {
-			const user = buildUser();
-			usersService.findByEmail.mockResolvedValue(user);
+		it("returns only the access token when the credentials are valid", async () => {
+			usersService.findByEmail.mockResolvedValue(buildUser());
 			hashingService.verify.mockResolvedValue(true);
 
-			await expect(service.login(CREDENTIALS)).resolves.toBe(user);
+			await expect(service.login(CREDENTIALS)).resolves.toEqual({
+				accessToken: ACCESS_TOKEN
+			});
 			expect(usersService.findByEmail).toHaveBeenCalledWith(
 				CREDENTIALS.email
 			);
+		});
+
+		it("signs the token with the user id as the subject", async () => {
+			usersService.findByEmail.mockResolvedValue(buildUser());
+			hashingService.verify.mockResolvedValue(true);
+
+			await service.login(CREDENTIALS);
+
+			expect(jwtService.signAsync).toHaveBeenCalledWith({ sub: USER_ID });
 		});
 
 		it("compares the given password against the stored hash", async () => {
@@ -84,6 +99,7 @@ describe("AuthService", () => {
 			await expect(service.login(CREDENTIALS)).rejects.toBeInstanceOf(
 				InvalidCredentialsError
 			);
+			expect(jwtService.signAsync).not.toHaveBeenCalled();
 		});
 
 		it("throws InvalidCredentialsError when no user has that email", async () => {
@@ -93,6 +109,7 @@ describe("AuthService", () => {
 				InvalidCredentialsError
 			);
 			expect(hashingService.verify).not.toHaveBeenCalled();
+			expect(jwtService.signAsync).not.toHaveBeenCalled();
 		});
 
 		it("rethrows an unexpected error from the users service untouched", async () => {

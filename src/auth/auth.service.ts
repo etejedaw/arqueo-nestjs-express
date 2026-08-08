@@ -1,19 +1,22 @@
 import { Injectable } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
 
-import { User } from "../users/entities/user.entity";
 import { UsersService } from "../users/users.service";
 import { InvalidCredentialsError } from "./auth.errors";
 import { LoginUserDto } from "./dto/login-user.dto";
 import { HashingService } from "./hashing.service";
+import { AuthTokens } from "./interfaces/auth-tokens.interface";
+import { JwtPayload } from "./interfaces/jwt-payload.interface";
 
 @Injectable()
 export class AuthService {
 	constructor(
 		private readonly usersService: UsersService,
-		private readonly hashingService: HashingService
+		private readonly hashingService: HashingService,
+		private readonly jwtService: JwtService
 	) {}
 
-	async login(loginUserDto: LoginUserDto): Promise<User> {
+	async login(loginUserDto: LoginUserDto): Promise<AuthTokens> {
 		const user = await this.usersService.findByEmail(loginUserDto.email);
 		if (!user) throw new InvalidCredentialsError();
 
@@ -23,6 +26,9 @@ export class AuthService {
 		);
 		if (!matchPassword) throw new InvalidCredentialsError();
 
-		return user;
+		const payload: JwtPayload = { sub: user.id };
+		const accessToken = await this.jwtService.signAsync(payload);
+
+		return { accessToken };
 	}
 }
