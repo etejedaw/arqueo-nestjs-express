@@ -14,6 +14,11 @@ http:
         "password": "Qx7mRt2kPw9nLz4v"
       }
 
+runtime:
+  scripts:
+    - type: after-response
+      code: bru.setVar("TOKEN", res.body.accessToken)
+
 settings:
   encodeUrl: true
   timeout: 0
@@ -24,8 +29,10 @@ settings:
 docs: |-
   # Login
 
-  Valida email y contraseña y devuelve la cuenta del usuario. No emite tokens
-  todavía.
+  Valida email y contraseña y devuelve un access token JWT. Es lo único que
+  devuelve: el perfil del usuario se pide aparte a `GET /auth/me`, que todavía
+  no existe. Tampoco hay refresh token: cuando el access expira hay que volver
+  a loguearse.
 
   **Auth:** public
 
@@ -44,18 +51,25 @@ docs: |-
   ## Response 200
   ```json
   {
-    "id": "<uuid>",
-    "name": "Ada Lovelace",
-    "email": "ada@arqueo.local"
+    "accessToken": "<jwt>"
   }
   ```
 
-  La respuesta pasa por `@Serialize(UserResponse)` (el de `auth/responses`): solo
-  salen `id`, `name` y `email`, sin envolver en `data`. El hash bcrypt nunca
-  sale.
+  La respuesta pasa por `@Serialize(LoginResponse)` (el de `auth/responses`):
+  solo sale `accessToken`, sin envolver en `data`. Ningún dato del usuario, y
+  el hash bcrypt menos.
+
+  El token se firma con HS256 y su payload es `{ sub, iat, exp }`, donde `sub`
+  es el id del usuario. El secreto y la expiración salen de
+  `JWT_ACCESS_SECRET` y `JWT_ACCESS_EXPIRES_IN` (por defecto un día). Un
+  script `after-response` lo guarda en la variable `{{TOKEN}}` de Bruno, para
+  cuando los endpoints protegidos existan: hoy ninguno lo exige todavía.
 
   Los usuarios desactivados (soft delete con `deletedAt`) no los encuentra
-  `findByEmail`, así que no pueden loguearse.
+  `findByEmail`, así que no pueden loguearse. Ojo que el token sigue siendo
+  válido hasta que expire aunque después desactiven o borren al usuario: no hay
+  revocación ni verificación contra la base en cada request mientras no exista
+  la estrategia JWT.
 
   Si el email no existe, la request corta de inmediato; si existe, la
   contraseña se compara contra el hash bcrypt almacenado. Los dos casos
