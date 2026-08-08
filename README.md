@@ -24,6 +24,14 @@ npm run start:dev
 Si una variable no está definida, se usa su valor por defecto de desarrollo, que coincide con `docker-compose.yml`. Una variable definida pero vacía (`DB_HOST=`) no toma el valor por
 defecto y hace fallar la validación al arrancar.
 
+## Auth
+
+`POST /api/v1/auth/login` valida email y contraseña y devuelve un access token JWT, y nada más: el perfil se pide aparte a `GET /api/v1/auth/me`, que todavía no existe. El token se firma con `JWT_ACCESS_SECRET` y dura lo que diga `JWT_ACCESS_EXPIRES_IN` (por defecto un día, admite `900`, `15m`, `2h`).
+
+En producción hay que definir el secreto: el valor por defecto es de desarrollo y está en el repo, así que una instancia que no lo cambie acepta tokens firmados por cualquiera.
+
+Todavía no hay refresh token ni endpoints que exijan el token.
+
 ## Migraciones
 
 La API corre las migraciones pendientes al arrancar (`migrationsRun: true`), así que una imagen nueva actualiza el esquema sola. Cada migración generada:
