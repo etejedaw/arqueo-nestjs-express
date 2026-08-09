@@ -26,11 +26,11 @@ defecto y hace fallar la validación al arrancar.
 
 ## Auth
 
-`POST /api/v1/auth/login` valida email y contraseña y devuelve un access token JWT, y nada más: el perfil se pide aparte a `GET /api/v1/auth/me`, que todavía no existe. El token se firma con `JWT_ACCESS_SECRET` y dura lo que diga `JWT_ACCESS_EXPIRES_IN` (por defecto un día, admite `900`, `15m`, `2h`).
+`POST /api/v1/auth/login` valida email y contraseña y devuelve un access token JWT, y nada más: el perfil se pide aparte a `GET /api/v1/auth/me`. El token se firma con `JWT_ACCESS_SECRET` y dura lo que diga `JWT_ACCESS_EXPIRES_IN` (por defecto un día, admite `900`, `15m`, `2h`).
 
 En producción hay que definir el secreto: el valor por defecto es de desarrollo y está en el repo, así que una instancia que no lo cambie acepta tokens firmados por cualquiera.
 
-Todavía no hay refresh token ni endpoints que exijan el token.
+Los endpoints protegidos llevan `@Auth()` y esperan el token en el header `Authorization: Bearer <token>`; `GET /api/v1/auth/me` devuelve el perfil del usuario del token. Todavía no hay refresh token.
 
 ## Migraciones
 
