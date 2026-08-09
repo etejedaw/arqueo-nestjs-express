@@ -30,7 +30,7 @@ docs: |-
   # Login
 
   Valida email y contraseña y devuelve un access token JWT. Es lo único que
-  devuelve: el perfil del usuario se pide aparte a `GET /auth/me`. Todavía no
+  devuelve: el perfil del usuario se pide aparte a `GET /users/me`. Todavía no
   hay refresh token: cuando el access expira hay que volver a loguearse.
 
   **Auth:** public

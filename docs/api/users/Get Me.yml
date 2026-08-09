@@ -1,14 +1,12 @@
 info:
   name: Get Me
   type: http
-  seq: 2
+  seq: 1
 
 http:
   method: GET
-  url: "{{BASE_URL}}/auth/me"
-  auth:
-    type: bearer
-    token: "{{TOKEN}}"
+  url: "{{BASE_URL}}/users/me"
+  auth: inherit
 
 settings:
   encodeUrl: true
@@ -21,12 +19,13 @@ docs: |-
   # Get Me
 
   Devuelve el perfil del usuario dueño del token. Es la fuente del perfil para
-  el frontend: el login solo entrega el token.
+  el frontend: el login solo entrega el token. Reemplaza a `GET /auth/me`, que
+  ya no existe.
 
   **Auth:** Bearer token
 
-  Usa la variable `{{TOKEN}}` que guarda `Login` en su script
-  `after-response`, así que hay que loguearse antes.
+  El token lo hereda de la carpeta `Users`, que usa la variable `{{TOKEN}}` que
+  guarda `Login` en su script `after-response`: hay que loguearse antes.
 
   ## Response 200
   ```json
@@ -37,15 +36,16 @@ docs: |-
   }
   ```
 
-  La respuesta pasa por `@Serialize(UserResponse)` (el de `auth/responses`):
+  La respuesta pasa por `@Serialize(UserResponse)` (el de `users/responses`):
   solo salen `id`, `name` y `email`, sin envolver en `data`. No incluye
   `isAdmin` ni el hash bcrypt.
 
-  El endpoint está protegido con `@Auth()`, que aplica `JwtAuthGuard`: el guard
-  verifica la firma y la expiración del token y después busca en la base al
-  usuario de `sub`. Por eso los datos siempre son los actuales, aunque el admin
-  los haya editado después del login, y un usuario desactivado o borrado queda
-  afuera en la request siguiente aunque su token no haya expirado.
+  Vive en `UsersController`, que lleva `@Auth()` sobre la clase: todo endpoint
+  de `/users` exige sesión. `@Auth()` aplica `JwtAuthGuard`, que verifica la
+  firma y la expiración del token y después busca en la base al usuario de
+  `sub`. Por eso los datos siempre son los actuales, aunque se hayan editado
+  después del login, y un usuario desactivado o borrado queda afuera en la
+  request siguiente aunque su token no haya expirado.
 
   ## Errors
   - `401 UNAUTHORIZED` — falta el header `Authorization`, el esquema no es `Bearer`, el token está mal formado, expiró o se firmó con otro secreto, o el usuario del token fue desactivado o borrado. Todos los casos responden igual.
