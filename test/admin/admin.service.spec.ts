@@ -141,7 +141,7 @@ describe("AdminService", () => {
 			usersService.findAll.mockResolvedValue(users);
 
 			await expect(service.findAllUsers()).resolves.toBe(users);
-			expect(usersService.findAll).toHaveBeenCalledWith(false);
+			expect(usersService.findAll).toHaveBeenCalledWith("all");
 		});
 	});
 
@@ -151,7 +151,7 @@ describe("AdminService", () => {
 			usersService.findById.mockResolvedValue(user);
 
 			await expect(service.findUser(USER_ID)).resolves.toBe(user);
-			expect(usersService.findById).toHaveBeenCalledWith(USER_ID, false);
+			expect(usersService.findById).toHaveBeenCalledWith(USER_ID, "all");
 		});
 	});
 

@@ -147,42 +147,44 @@ describe("UsersService", () => {
 	});
 
 	describe("findAll", () => {
-		it("returns only the active users when isActive is true", async () => {
+		it("returns only the active users when the scope is active", async () => {
 			const users = [buildUser(), buildOtherAdmin()];
 			repository.find.mockResolvedValue(users);
 
-			await expect(service.findAll(true)).resolves.toBe(users);
+			await expect(service.findAll("active")).resolves.toBe(users);
 			expect(repository.find).toHaveBeenCalledWith({
 				withDeleted: false
 			});
 		});
 
-		it("includes the deactivated users when isActive is false", async () => {
+		it("includes the deactivated users when the scope is all", async () => {
 			const users = [buildUser(), buildOtherAdmin()];
 			repository.find.mockResolvedValue(users);
 
-			await expect(service.findAll(false)).resolves.toBe(users);
+			await expect(service.findAll("all")).resolves.toBe(users);
 			expect(repository.find).toHaveBeenCalledWith({ withDeleted: true });
 		});
 	});
 
 	describe("findById", () => {
-		it("looks only among the active users when isActive is true", async () => {
+		it("looks only among the active users when the scope is active", async () => {
 			const user = buildUser();
 			repository.findOne.mockResolvedValue(user);
 
-			await expect(service.findById(USER_ID, true)).resolves.toBe(user);
+			await expect(service.findById(USER_ID, "active")).resolves.toBe(
+				user
+			);
 			expect(repository.findOne).toHaveBeenCalledWith({
 				where: { id: USER_ID },
 				withDeleted: false
 			});
 		});
 
-		it("also finds a deactivated user when isActive is false", async () => {
+		it("also finds a deactivated user when the scope is all", async () => {
 			const user = buildUser({ deletedAt: TIMESTAMP });
 			repository.findOne.mockResolvedValue(user);
 
-			await expect(service.findById(USER_ID, false)).resolves.toBe(user);
+			await expect(service.findById(USER_ID, "all")).resolves.toBe(user);
 			expect(repository.findOne).toHaveBeenCalledWith({
 				where: { id: USER_ID },
 				withDeleted: true
@@ -192,7 +194,7 @@ describe("UsersService", () => {
 		it("throws UserNotFoundError when no user has the given id", async () => {
 			repository.findOne.mockResolvedValue(null);
 
-			const result = service.findById(USER_ID, false);
+			const result = service.findById(USER_ID, "all");
 
 			await expect(result).rejects.toBeInstanceOf(UserNotFoundError);
 			await expect(result).rejects.toMatchObject({ userId: USER_ID });

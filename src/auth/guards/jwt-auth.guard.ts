@@ -49,7 +49,7 @@ export class JwtAuthGuard implements CanActivate {
 
 	private async findUser(id: string): Promise<AuthUser> {
 		try {
-			const user = await this.usersService.findById(id, false);
+			const user = await this.usersService.findById(id, "active");
 			return {
 				id: user.id,
 				name: user.name,

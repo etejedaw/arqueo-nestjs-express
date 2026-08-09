@@ -5,6 +5,7 @@ import { EntityManager, Repository } from "typeorm";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
+import { UserScope } from "./types/user-scope.type";
 import {
 	EmailAlreadyInUseError,
 	LastAdminError,
@@ -31,14 +32,16 @@ export class UsersService {
 		return await this.usersRepository.save(user);
 	}
 
-	async findAll(isActive: boolean): Promise<User[]> {
-		return await this.usersRepository.find({ withDeleted: !isActive });
+	async findAll(scope: UserScope): Promise<User[]> {
+		return await this.usersRepository.find({
+			withDeleted: scope === "all"
+		});
 	}
 
-	async findById(id: string, isActive: boolean): Promise<User> {
+	async findById(id: string, scope: UserScope): Promise<User> {
 		const user = await this.usersRepository.findOne({
 			where: { id },
-			withDeleted: !isActive
+			withDeleted: scope === "all"
 		});
 		if (!user) throw new UserNotFoundError(id);
 
@@ -52,7 +55,7 @@ export class UsersService {
 	async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
 		return await this.usersRepository.manager.transaction(async manager => {
 			const activeAdmins = await this.lockActiveAdmins(manager);
-			const user = await this.lockUser(manager, id, false);
+			const user = await this.lockUser(manager, id, "active");
 			if (updateUserDto.email && updateUserDto.email !== user.email) {
 				const existing = await manager.findOne(User, {
 					where: { email: updateUserDto.email },
@@ -67,19 +70,19 @@ export class UsersService {
 			manager.merge(User, user, updateUserDto);
 			await manager.save(user);
 
-			return await this.lockUser(manager, id, false);
+			return await this.lockUser(manager, id, "active");
 		});
 	}
 
 	async updatePassword(id: string, password: string): Promise<void> {
-		await this.findById(id, true);
+		await this.findById(id, "active");
 		await this.usersRepository.update(id, { password });
 	}
 
 	async remove(id: string): Promise<boolean> {
 		return await this.usersRepository.manager.transaction(async manager => {
 			const activeAdmins = await this.lockActiveAdmins(manager);
-			const user = await this.lockUser(manager, id, true);
+			const user = await this.lockUser(manager, id, "all");
 			if (user.deletedAt) return false;
 
 			this.assertAnotherAdminRemains(activeAdmins, user);
@@ -103,7 +106,7 @@ export class UsersService {
 	async delete(id: string): Promise<boolean> {
 		return await this.usersRepository.manager.transaction(async manager => {
 			const activeAdmins = await this.lockActiveAdmins(manager);
-			const user = await this.lockUser(manager, id, true);
+			const user = await this.lockUser(manager, id, "all");
 
 			this.assertAnotherAdminRemains(activeAdmins, user);
 			const result = await manager.delete(User, id);
@@ -123,11 +126,11 @@ export class UsersService {
 	private async lockUser(
 		manager: EntityManager,
 		id: string,
-		withDeleted: boolean
+		scope: UserScope
 	): Promise<User> {
 		const user = await manager.findOne(User, {
 			where: { id },
-			withDeleted,
+			withDeleted: scope === "all",
 			lock: this.writeLock
 		});
 		if (!user) throw new UserNotFoundError(id);

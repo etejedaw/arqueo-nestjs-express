@@ -42,11 +42,11 @@ export class AdminService {
 	}
 
 	async findAllUsers(): Promise<User[]> {
-		return await this.usersService.findAll(false);
+		return await this.usersService.findAll("all");
 	}
 
 	async findUser(id: string): Promise<User> {
-		return await this.usersService.findById(id, false);
+		return await this.usersService.findById(id, "all");
 	}
 
 	async updateUser(id: string, updateUserDto: UpdateUserDto): Promise<User> {

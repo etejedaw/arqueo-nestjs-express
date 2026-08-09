@@ -102,7 +102,7 @@ describe("JwtAuthGuard", () => {
 			buildContext(withAuthorization(`Bearer ${ACCESS_TOKEN}`))
 		);
 
-		expect(usersService.findById).toHaveBeenCalledWith(USER_ID, true);
+		expect(usersService.findById).toHaveBeenCalledWith(USER_ID, "active");
 	});
 
 	it("rejects a request without an authorization header", async () => {
