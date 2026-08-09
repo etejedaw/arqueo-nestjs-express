@@ -30,9 +30,8 @@ docs: |-
   # Login
 
   Valida email y contraseña y devuelve un access token JWT. Es lo único que
-  devuelve: el perfil del usuario se pide aparte a `GET /auth/me`, que todavía
-  no existe. Tampoco hay refresh token: cuando el access expira hay que volver
-  a loguearse.
+  devuelve: el perfil del usuario se pide aparte a `GET /auth/me`. Todavía no
+  hay refresh token: cuando el access expira hay que volver a loguearse.
 
   **Auth:** public
 
@@ -62,14 +61,14 @@ docs: |-
   El token se firma con HS256 y su payload es `{ sub, iat, exp }`, donde `sub`
   es el id del usuario. El secreto y la expiración salen de
   `JWT_ACCESS_SECRET` y `JWT_ACCESS_EXPIRES_IN` (por defecto un día). Un
-  script `after-response` lo guarda en la variable `{{TOKEN}}` de Bruno, para
-  cuando los endpoints protegidos existan: hoy ninguno lo exige todavía.
+  script `after-response` lo guarda en la variable `{{TOKEN}}` de Bruno, que
+  usan los endpoints protegidos como `Get Me`.
 
   Los usuarios desactivados (soft delete con `deletedAt`) no los encuentra
-  `findByEmail`, así que no pueden loguearse. Ojo que el token sigue siendo
-  válido hasta que expire aunque después desactiven o borren al usuario: no hay
-  revocación ni verificación contra la base en cada request mientras no exista
-  la estrategia JWT.
+  `findByEmail`, así que no pueden loguearse. Un token ya emitido también deja
+  de servir apenas desactivan o borran al usuario, porque `JwtAuthGuard` lo
+  busca en la base en cada request. Lo que todavía no invalida los tokens
+  abiertos es cambiar la contraseña.
 
   Si el email no existe, la request corta de inmediato; si existe, la
   contraseña se compara contra el hash bcrypt almacenado. Los dos casos

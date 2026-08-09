@@ -1,0 +1,52 @@
+info:
+  name: Get Me
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{BASE_URL}}/auth/me"
+  auth:
+    type: bearer
+    token: "{{TOKEN}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: true
+
+docs: |-
+  # Get Me
+
+  Devuelve el perfil del usuario dueño del token. Es la fuente del perfil para
+  el frontend: el login solo entrega el token.
+
+  **Auth:** Bearer token
+
+  Usa la variable `{{TOKEN}}` que guarda `Login` en su script
+  `after-response`, así que hay que loguearse antes.
+
+  ## Response 200
+  ```json
+  {
+    "id": "<uuid>",
+    "name": "Ada Lovelace",
+    "email": "ada@arqueo.local"
+  }
+  ```
+
+  La respuesta pasa por `@Serialize(UserResponse)` (el de `auth/responses`):
+  solo salen `id`, `name` y `email`, sin envolver en `data`. No incluye
+  `isAdmin` ni el hash bcrypt.
+
+  El endpoint está protegido con `@Auth()`, que aplica `JwtAuthGuard`: el guard
+  verifica la firma y la expiración del token y después busca en la base al
+  usuario de `sub`. Por eso los datos siempre son los actuales, aunque el admin
+  los haya editado después del login, y un usuario desactivado o borrado queda
+  afuera en la request siguiente aunque su token no haya expirado.
+
+  ## Errors
+  - `401 UNAUTHORIZED` — falta el header `Authorization`, el esquema no es `Bearer`, el token está mal formado, expiró o se firmó con otro secreto, o el usuario del token fue desactivado o borrado. Todos los casos responden igual.
+  - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.
