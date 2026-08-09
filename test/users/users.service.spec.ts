@@ -1,6 +1,7 @@
 import { Test } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 
+import { HashingService } from "../../src/common/hashing/hashing.service";
 import { CreateUserDto } from "../../src/users/dto/create-user.dto";
 import { User } from "../../src/users/entities/user.entity";
 import {
@@ -72,6 +73,7 @@ describe("UsersService", () => {
 	let service: UsersService;
 	let manager: ManagerMock;
 	let repository: ReturnType<typeof createRepositoryMock>;
+	let hashingService: { hash: jest.Mock; verify: jest.Mock };
 
 	function givenLockedRows(activeAdmins: User[], user: User | null): void {
 		manager.find.mockResolvedValue(activeAdmins);
@@ -81,11 +83,16 @@ describe("UsersService", () => {
 	beforeEach(async () => {
 		manager = createManagerMock();
 		repository = createRepositoryMock(manager);
+		hashingService = {
+			hash: jest.fn().mockResolvedValue("new-hashed-password"),
+			verify: jest.fn().mockResolvedValue(true)
+		};
 
 		const moduleRef = await Test.createTestingModule({
 			providers: [
 				UsersService,
-				{ provide: getRepositoryToken(User), useValue: repository }
+				{ provide: getRepositoryToken(User), useValue: repository },
+				{ provide: HashingService, useValue: hashingService }
 			]
 		}).compile();
 
@@ -353,6 +360,49 @@ describe("UsersService", () => {
 
 			await expect(
 				service.updatePassword(USER_ID, "new-hashed-password")
+			).rejects.toBeInstanceOf(UserNotFoundError);
+			expect(repository.update).not.toHaveBeenCalled();
+		});
+	});
+
+	describe("changePassword", () => {
+		const input = { password: "arriendo-marzo-475000" };
+
+		it("stores only the hash of the given password", async () => {
+			repository.findOne.mockResolvedValue(buildUser());
+
+			await service.changePassword(USER_ID, input);
+
+			expect(hashingService.hash).toHaveBeenCalledWith(input.password);
+			expect(repository.update).toHaveBeenCalledWith(USER_ID, {
+				password: "new-hashed-password"
+			});
+		});
+
+		it("does not ask for or compare the current password", async () => {
+			repository.findOne.mockResolvedValue(buildUser());
+
+			await service.changePassword(USER_ID, input);
+
+			expect(hashingService.verify).not.toHaveBeenCalled();
+		});
+
+		it("looks only among the active users", async () => {
+			repository.findOne.mockResolvedValue(buildUser());
+
+			await service.changePassword(USER_ID, input);
+
+			expect(repository.findOne).toHaveBeenCalledWith({
+				where: { id: USER_ID },
+				withDeleted: false
+			});
+		});
+
+		it("throws UserNotFoundError without updating when the user does not exist or is deactivated", async () => {
+			repository.findOne.mockResolvedValue(null);
+
+			await expect(
+				service.changePassword(USER_ID, input)
 			).rejects.toBeInstanceOf(UserNotFoundError);
 			expect(repository.update).not.toHaveBeenCalled();
 		});

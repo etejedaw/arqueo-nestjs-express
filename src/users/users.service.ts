@@ -2,6 +2,8 @@ import { Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { EntityManager, Repository } from "typeorm";
 
+import { HashingService } from "../common/hashing/hashing.service";
+import { ChangePasswordDto } from "./dto/change-password.dto";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { UpdateUserDto } from "./dto/update-user.dto";
 import { User } from "./entities/user.entity";
@@ -18,7 +20,8 @@ export class UsersService {
 
 	constructor(
 		@InjectRepository(User)
-		private readonly usersRepository: Repository<User>
+		private readonly usersRepository: Repository<User>,
+		private readonly hashingService: HashingService
 	) {}
 
 	async create(createUserDto: CreateUserDto): Promise<User> {
@@ -77,6 +80,16 @@ export class UsersService {
 	async updatePassword(id: string, password: string): Promise<void> {
 		await this.findById(id, "active");
 		await this.usersRepository.update(id, { password });
+	}
+
+	async changePassword(
+		id: string,
+		changePasswordDto: ChangePasswordDto
+	): Promise<void> {
+		const password = await this.hashingService.hash(
+			changePasswordDto.password
+		);
+		await this.updatePassword(id, password);
 	}
 
 	async remove(id: string): Promise<boolean> {
