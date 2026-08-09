@@ -2,7 +2,7 @@ import { Test } from "@nestjs/testing";
 
 import { AdminService } from "../../src/admin/admin.service";
 import { GeneratePasswordService } from "../../src/admin/generate-password.service";
-import { HashingService } from "../../src/auth/hashing.service";
+import { HashingService } from "../../src/common/hashing/hashing.service";
 import { User } from "../../src/users/entities/user.entity";
 import {
 	LastAdminError,

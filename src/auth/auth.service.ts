@@ -1,10 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 
+import { HashingService } from "../common/hashing/hashing.service";
 import { UsersService } from "../users/users.service";
 import { InvalidCredentialsError } from "./auth.errors";
 import { LoginUserDto } from "./dto/login-user.dto";
-import { HashingService } from "./hashing.service";
 import { AuthTokens } from "./interfaces/auth-tokens.interface";
 import { JwtPayload } from "./interfaces/jwt-payload.interface";
 

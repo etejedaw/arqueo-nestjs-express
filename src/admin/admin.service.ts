@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 
-import { HashingService } from "../auth/hashing.service";
+import { HashingService } from "../common/hashing/hashing.service";
 import { User } from "../users/entities/user.entity";
 import { UsersService } from "../users/users.service";
 import { CreateUserDto } from "./dto/create-user.dto";

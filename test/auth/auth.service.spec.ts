@@ -3,7 +3,7 @@ import { Test } from "@nestjs/testing";
 
 import { InvalidCredentialsError } from "../../src/auth/auth.errors";
 import { AuthService } from "../../src/auth/auth.service";
-import { HashingService } from "../../src/auth/hashing.service";
+import { HashingService } from "../../src/common/hashing/hashing.service";
 import { User } from "../../src/users/entities/user.entity";
 import { UsersService } from "../../src/users/users.service";
 

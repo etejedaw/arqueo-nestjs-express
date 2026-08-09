@@ -1,6 +1,6 @@
 import * as bcrypt from "bcrypt";
 
-import { HashingService } from "../../src/auth/hashing.service";
+import { HashingService } from "../../../src/common/hashing/hashing.service";
 
 jest.mock("bcrypt");
 

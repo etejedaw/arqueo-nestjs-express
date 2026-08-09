@@ -3,20 +3,23 @@ import { APP_FILTER } from "@nestjs/core";
 import { JwtModule } from "@nestjs/jwt";
 
 import authConfig from "../common/config/auth.config";
+import { HashingModule } from "../common/hashing/hashing.module";
 import { UsersModule } from "../users/users.module";
 import { AuthController } from "./auth.controller";
 import { AuthErrorsFilter } from "./auth.errors";
 import { AuthService } from "./auth.service";
-import { HashingService } from "./hashing.service";
 
 @Module({
-	imports: [UsersModule, JwtModule.registerAsync(authConfig.asProvider())],
+	imports: [
+		UsersModule,
+		HashingModule,
+		JwtModule.registerAsync({ ...authConfig.asProvider(), global: true })
+	],
 	controllers: [AuthController],
 	providers: [
 		AuthService,
-		HashingService,
 		{ provide: APP_FILTER, useClass: AuthErrorsFilter }
 	],
-	exports: [AuthService, HashingService]
+	exports: [AuthService]
 })
 export class AuthModule {}
