@@ -6,6 +6,7 @@ info:
 http:
   method: GET
   url: "{{BASE_URL}}/admin/users"
+  auth: inherit
 
 settings:
   encodeUrl: true
@@ -20,11 +21,17 @@ docs: |-
   Lista todos los usuarios de la instancia, activos y desactivados, para el
   panel de administración.
 
-  **Auth:** public
+  **Auth:** Bearer token
 
-  Todavía no hay guard: el endpoint vive bajo `/admin` pero no exige sesión ni
-  rol, así que hoy cualquiera puede llamarlo. Tiene que estar resuelto antes de
-  cualquier despliegue.
+  El token lo hereda de la carpeta `Admin`, que usa la variable `{{TOKEN}}` que
+  guarda `Login` en su script `after-response`: hay que loguearse antes. El
+  primer admin de una instancia vacía lo crea la API al arrancar
+  (`admin@arqueo.local`, con la contraseña en el log de arranque).
+
+  `AdminController` lleva `@Auth()` sobre la clase: exige sesión, pero todavía
+  no revisa el rol. Cualquier usuario logueado, admin o no, puede llamar a este
+  endpoint. Los permisos tienen que estar resueltos antes de cualquier
+  despliegue.
 
   ## Response 200
   ```json
@@ -57,4 +64,5 @@ docs: |-
   salvo `password`, sin envolver en `data`.
 
   ## Errors
+  - `401 UNAUTHORIZED` — falta el header `Authorization`, el esquema no es `Bearer`, el token está mal formado, expiró o se firmó con otro secreto, o el usuario del token fue desactivado o borrado. Todos los casos responden igual.
   - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.

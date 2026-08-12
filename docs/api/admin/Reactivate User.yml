@@ -6,6 +6,7 @@ info:
 http:
   method: PATCH
   url: "{{BASE_URL}}/admin/users/{{USER_ID}}/reactivate"
+  auth: inherit
 
 settings:
   encodeUrl: true
@@ -20,11 +21,17 @@ docs: |-
   Reactiva a un usuario desactivado: vuelve a poder iniciar sesión con la
   contraseña que tenía.
 
-  **Auth:** public
+  **Auth:** Bearer token
 
-  Todavía no hay guard: el endpoint vive bajo `/admin` pero no exige sesión ni
-  rol, así que hoy cualquiera puede llamarlo. Tiene que estar resuelto antes de
-  cualquier despliegue.
+  El token lo hereda de la carpeta `Admin`, que usa la variable `{{TOKEN}}` que
+  guarda `Login` en su script `after-response`: hay que loguearse antes. El
+  primer admin de una instancia vacía lo crea la API al arrancar
+  (`admin@arqueo.local`, con la contraseña en el log de arranque).
+
+  `AdminController` lleva `@Auth()` sobre la clase: exige sesión, pero todavía
+  no revisa el rol. Cualquier usuario logueado, admin o no, puede llamar a este
+  endpoint. Los permisos tienen que estar resueltos antes de cualquier
+  despliegue.
 
   ## Path params
   - `id` (uuid) — id del usuario. `ParseUUIDPipe` lo valida antes de llegar al service; acepta UUID v3, v4, v5 y v7. En la colección es `{{USER_ID}}`, que setea `Create User` al crear un usuario.
@@ -39,6 +46,7 @@ docs: |-
   respuesta no indica si hubo cambio.
 
   ## Errors
+  - `401 UNAUTHORIZED` — falta el header `Authorization`, el esquema no es `Bearer`, el token está mal formado, expiró o se firmó con otro secreto, o el usuario del token fue desactivado o borrado. Todos los casos responden igual.
   - `400 BAD_REQUEST` — `id` no es un UUID válido (`Validation failed (uuid is expected)`).
   - `404 UserNotFoundError` — no existe ningún usuario con ese id, activo ni desactivado.
   - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.
