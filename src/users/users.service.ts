@@ -51,6 +51,10 @@ export class UsersService {
 		return user;
 	}
 
+	async hasActiveAdmin(): Promise<boolean> {
+		return await this.usersRepository.existsBy({ isAdmin: true });
+	}
+
 	async findByEmail(email: string): Promise<User | null> {
 		return await this.usersRepository.findOneBy({ email });
 	}

@@ -58,6 +58,7 @@ function createRepositoryMock(manager: ManagerMock) {
 		find: jest.fn(),
 		findOne: jest.fn(),
 		findOneBy: jest.fn(),
+		existsBy: jest.fn(),
 		restore: jest.fn(),
 		update: jest.fn(),
 		manager: {
@@ -205,6 +206,21 @@ describe("UsersService", () => {
 
 			await expect(result).rejects.toBeInstanceOf(UserNotFoundError);
 			await expect(result).rejects.toMatchObject({ userId: USER_ID });
+		});
+	});
+
+	describe("hasActiveAdmin", () => {
+		it("returns true when an active admin exists", async () => {
+			repository.existsBy.mockResolvedValue(true);
+
+			await expect(service.hasActiveAdmin()).resolves.toBe(true);
+			expect(repository.existsBy).toHaveBeenCalledWith({ isAdmin: true });
+		});
+
+		it("returns false when there is no active admin", async () => {
+			repository.existsBy.mockResolvedValue(false);
+
+			await expect(service.hasActiveAdmin()).resolves.toBe(false);
 		});
 	});
 
