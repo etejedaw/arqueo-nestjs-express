@@ -11,6 +11,7 @@ import {
 	Post
 } from "@nestjs/common";
 
+import { Auth } from "../auth/decorators/auth.decorator";
 import { Serialize } from "../common/decorators/serialize.decorator";
 import { User } from "../users/entities/user.entity";
 import { AdminService } from "./admin.service";
@@ -19,6 +20,7 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { CreatedUserResponse } from "./responses/created-user.response";
 import { UserResponse } from "./responses/user.response";
 
+@Auth()
 @Controller("admin/users")
 export class AdminController {
 	constructor(private readonly adminService: AdminService) {}
