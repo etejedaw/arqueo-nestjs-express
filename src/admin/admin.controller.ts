@@ -20,11 +20,11 @@ import { UpdateUserDto } from "./dto/update-user.dto";
 import { CreatedUserResponse } from "./responses/created-user.response";
 import { UserResponse } from "./responses/user.response";
 
-@Auth()
 @Controller("admin/users")
 export class AdminController {
 	constructor(private readonly adminService: AdminService) {}
 
+	@Auth("users:create")
 	@Serialize(CreatedUserResponse)
 	@Post()
 	async create(
@@ -42,18 +42,21 @@ export class AdminController {
 		};
 	}
 
+	@Auth("users:read")
 	@Serialize(UserResponse)
 	@Get()
 	async findAll(): Promise<User[]> {
 		return await this.adminService.findAllUsers();
 	}
 
+	@Auth("users:read")
 	@Serialize(UserResponse)
 	@Get(":id")
 	async findUser(@Param("id", ParseUUIDPipe) id: string): Promise<User> {
 		return await this.adminService.findUser(id);
 	}
 
+	@Auth("users:update")
 	@Serialize(UserResponse)
 	@Patch(":id")
 	async updateUser(
@@ -63,6 +66,7 @@ export class AdminController {
 		return await this.adminService.updateUser(id, updateUserDto);
 	}
 
+	@Auth("users:update")
 	@HttpCode(HttpStatus.OK)
 	@Post(":id/reset-password")
 	async resetPassword(
@@ -72,6 +76,7 @@ export class AdminController {
 		return { password };
 	}
 
+	@Auth("users:update")
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@Patch(":id/deactivate")
 	async deactivateUser(
@@ -80,12 +85,14 @@ export class AdminController {
 		await this.adminService.deactivateUser(id);
 	}
 
+	@Auth("users:update")
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@Patch(":id/reactivate")
 	async activateUser(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
 		await this.adminService.activateUser(id);
 	}
 
+	@Auth("users:delete")
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@Delete(":id")
 	async deleteUser(@Param("id", ParseUUIDPipe) id: string): Promise<void> {
