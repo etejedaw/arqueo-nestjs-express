@@ -8,11 +8,6 @@ http:
   url: "{{BASE_URL}}/admin/users/{{USER_ID}}"
   auth: inherit
 
-runtime:
-  variables:
-    - name: USER_ID
-      value: b8a93a8f-e2d4-4e76-bda3-396e58889aee
-
 settings:
   encodeUrl: true
   timeout: 0

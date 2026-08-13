@@ -10,11 +10,16 @@ http:
     type: json
     data: |-
       {
-        "name": "Admin",
-        "email": "admin@arqueo.local",
+        "name": "Ada Lovelace",
+        "email": "ada@arqueo.local",
         "isAdmin": false
       }
   auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: bru.setVar("USER_ID", res.body.id)
 
 settings:
   encodeUrl: true
@@ -68,6 +73,7 @@ docs: |-
     "id": "<uuid>",
     "name": "Ada Lovelace",
     "email": "ada@arqueo.local",
+    "isAdmin": false,
     "password": "9f3a0c7e"
   }
   ```
@@ -78,12 +84,13 @@ docs: |-
   usuario. La respuesta viaja en claro, así que este endpoint exige TLS en
   cualquier despliegue real.
 
-  La respuesta pasa por `@Serialize(CreatedUserResponseDto)`: solo salen
-  `id`, `name`, `email` y la contraseña generada. El hash bcrypt nunca sale. La
-  respuesta no se envuelve en `data`.
+  La respuesta pasa por `@Serialize(CreatedUserResponse)`: solo salen `id`,
+  `name`, `email`, `isAdmin` y la contraseña generada. El hash bcrypt nunca
+  sale. La respuesta no se envuelve en `data`.
 
-  Guarda `id` en la variable `{{USER_ID}}` de la colección, que usan los
-  demás endpoints de `admin`.
+  Un script `after-response` guarda `id` en la variable `{{USER_ID}}`, que usan
+  los demás endpoints de `admin`. Por eso conviene correrlo primero: el resto
+  de la carpeta opera sobre el usuario recién creado.
 
   ## Errors
   - `401 UNAUTHORIZED` — falta el header `Authorization`, el esquema no es `Bearer`, el token está mal formado, expiró o se firmó con otro secreto, o el usuario del token fue desactivado o borrado. Todos los casos responden igual.

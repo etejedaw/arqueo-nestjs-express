@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{BASE_URL}}/admin/users/bf540424-30f5-4d3a-9302-3350b82a4a45"
+  url: "{{BASE_URL}}/admin/users/{{USER_ID}}"
   auth: inherit
 
 settings:
@@ -47,7 +47,7 @@ docs: |-
   }
   ```
 
-  Encuentra también a los desactivados (`UsersService.findById(id, false)`):
+  Encuentra también a los desactivados (`UsersService.findById(id, "all")`):
   se reconocen porque `deletedAt` no es `null`.
 
   La respuesta pasa por `@Serialize(UserResponse)`: salen todos los campos
