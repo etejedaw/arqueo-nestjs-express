@@ -30,6 +30,10 @@ docs: |-
 
   **Auth:** Bearer token
 
+  Lleva `@Auth("profile:update")`, un permiso que tienen todos los roles, así
+  que en la práctica alcanza con tener sesión. El token lo hereda de la carpeta
+  `Users` (`{{TOKEN}}`, que guarda `Login`).
+
   ## Request body
   ```json
   {
@@ -56,7 +60,7 @@ docs: |-
   transacción y solo sobre usuarios activos.
 
   ## Errors
-  - `401 UNAUTHORIZED` — sin token, token inválido o expirado, o usuario desactivado o borrado.
+  - `401 UNAUTHORIZED` — falta el header `Authorization`, el esquema no es `Bearer`, el token está mal formado, expiró o se firmó con otro secreto, o el usuario del token fue desactivado o borrado. Todos los casos responden igual.
   - `400 BAD_REQUEST` — el body no es JSON válido; lo rechaza el body parser de Express antes de llegar al `ValidationPipe`.
-  - `422 UNPROCESSABLE_ENTITY` — body inválido según el DTO: `name` vacío o que no es string, o campos no permitidos como `email`.
+  - `422 UNPROCESSABLE_ENTITY` — body inválido según el DTO: `name` vacío o que no es string, o campos no permitidos como `email` o `isAdmin`: un usuario no puede cambiarse el email ni darse el rol de admin desde acá.
   - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.

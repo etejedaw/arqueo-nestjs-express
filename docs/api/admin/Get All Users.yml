@@ -56,7 +56,7 @@ docs: |-
   ]
   ```
 
-  Incluye a los desactivados (`UsersService.findAll(false)`): se reconocen
+  Incluye a los desactivados (`UsersService.findAll("all")`): se reconocen
   porque `deletedAt` no es `null`. No hay paginación ni filtros.
 
   Cada usuario pasa por `@Serialize(UserResponse)`: salen todos los campos

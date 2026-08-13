@@ -75,9 +75,14 @@ docs: |-
   }
   ```
 
-  Devuelve el usuario recargado después de guardar. Corre dentro de una transacción que bloquea primero a los admins activos y
-  después al usuario, para aplicar la regla de que siempre quede al menos un
-  admin.
+  Devuelve el usuario recargado después de guardar. Corre dentro de una
+  transacción que bloquea primero a los admins activos y después al usuario,
+  para aplicar la regla de que siempre quede al menos un admin.
+
+  Un cambio de `isAdmin` rige desde la request siguiente, sin volver a
+  loguearse: `JwtAuthGuard` carga al usuario en cada request y
+  `PermissionsGuard` deriva el rol de ese `isAdmin`. Un admin puede quitarse el
+  rol a sí mismo si queda otro admin activo, y pierde `/admin` de inmediato.
 
   La respuesta pasa por `@Serialize(UserResponse)`: salen todos los campos
   salvo `password`, sin envolver en `data`.
