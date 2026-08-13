@@ -10,8 +10,8 @@ http:
     type: json
     data: |-
       {
-        "email": "admin@arqueo.local",
-        "password": "Qx7mRt2kPw9nLz4v"
+        "email": "{{process.env.ADMIN_EMAIL}}",
+        "password": "{{process.env.ADMIN_PASSWORD}}"
       }
 
 runtime:
@@ -34,6 +34,12 @@ docs: |-
   hay refresh token: cuando el access expira hay que volver a loguearse.
 
   **Auth:** public
+
+  El body de la colección toma las credenciales de `{{process.env.ADMIN_EMAIL}}`
+  y `{{process.env.ADMIN_PASSWORD}}`, del archivo `docs/api/.env` (ignorado por
+  git), para no dejar contraseñas en el repo. En una instancia nueva, el admin
+  inicial es `admin@arqueo.local` y su contraseña sale una sola vez en el log
+  de arranque de la API.
 
   ## Request body
   ```json
