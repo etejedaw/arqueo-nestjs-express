@@ -28,10 +28,9 @@ docs: |-
   primer admin de una instancia vacía lo crea la API al arrancar
   (`admin@arqueo.local`, con la contraseña en el log de arranque).
 
-  `AdminController` lleva `@Auth()` sobre la clase: exige sesión, pero todavía
-  no revisa el rol. Cualquier usuario logueado, admin o no, puede llamar a este
-  endpoint. Los permisos tienen que estar resueltos antes de cualquier
-  despliegue.
+  Lleva `@Auth("users:update")`: `JwtAuthGuard` exige sesión y después
+  `PermissionsGuard` exige el permiso `users:update`. Solo el rol `admin` lo
+  tiene, a través de `users:manage`; un usuario normal recibe 403.
 
   ## Path params
   - `id` (uuid) — id del usuario. `ParseUUIDPipe` lo valida antes de llegar al service; acepta UUID v3, v4, v5 y v7. En la colección es `{{USER_ID}}`, que setea `Create User` al crear un usuario.
@@ -47,6 +46,7 @@ docs: |-
 
   ## Errors
   - `401 UNAUTHORIZED` — falta el header `Authorization`, el esquema no es `Bearer`, el token está mal formado, expiró o se firmó con otro secreto, o el usuario del token fue desactivado o borrado. Todos los casos responden igual.
+  - `403 FORBIDDEN` — el usuario del token no es admin: `PermissionsGuard` no encuentra el permiso en su rol.
   - `400 BAD_REQUEST` — `id` no es un UUID válido (`Validation failed (uuid is expected)`).
   - `404 UserNotFoundError` — no existe ningún usuario con ese id, activo ni desactivado.
   - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.

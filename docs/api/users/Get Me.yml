@@ -40,12 +40,12 @@ docs: |-
   solo salen `id`, `name` y `email`, sin envolver en `data`. No incluye
   `isAdmin` ni el hash bcrypt.
 
-  Vive en `UsersController`, que lleva `@Auth()` sobre la clase: todo endpoint
-  de `/users` exige sesión. `@Auth()` aplica `JwtAuthGuard`, que verifica la
-  firma y la expiración del token y después busca en la base al usuario de
-  `sub`. Por eso los datos siempre son los actuales, aunque se hayan editado
-  después del login, y un usuario desactivado o borrado queda afuera en la
-  request siguiente aunque su token no haya expirado.
+  Lleva `@Auth("profile:read")`, un permiso que tienen todos los roles, así que
+  en la práctica alcanza con tener sesión. `@Auth()` aplica `JwtAuthGuard`, que
+  verifica la firma y la expiración del token y después busca en la base al
+  usuario de `sub`. Por eso los datos siempre son los actuales, aunque se hayan
+  editado después del login, y un usuario desactivado o borrado queda afuera en
+  la request siguiente aunque su token no haya expirado.
 
   ## Errors
   - `401 UNAUTHORIZED` — falta el header `Authorization`, el esquema no es `Bearer`, el token está mal formado, expiró o se firmó con otro secreto, o el usuario del token fue desactivado o borrado. Todos los casos responden igual.

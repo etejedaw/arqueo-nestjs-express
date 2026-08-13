@@ -38,10 +38,9 @@ docs: |-
   primer admin de una instancia vacía lo crea la API al arrancar
   (`admin@arqueo.local`, con la contraseña en el log de arranque).
 
-  `AdminController` lleva `@Auth()` sobre la clase: exige sesión, pero todavía
-  no revisa el rol. Cualquier usuario logueado, admin o no, puede llamar a este
-  endpoint. Los permisos tienen que estar resueltos antes de cualquier
-  despliegue.
+  Lleva `@Auth("users:create")`: `JwtAuthGuard` exige sesión y después
+  `PermissionsGuard` exige el permiso `users:create`. Solo el rol `admin` lo
+  tiene, a través de `users:manage`; un usuario normal recibe 403.
 
   ## Request body
   ```json
@@ -88,6 +87,7 @@ docs: |-
 
   ## Errors
   - `401 UNAUTHORIZED` — falta el header `Authorization`, el esquema no es `Bearer`, el token está mal formado, expiró o se firmó con otro secreto, o el usuario del token fue desactivado o borrado. Todos los casos responden igual.
+  - `403 FORBIDDEN` — el usuario del token no es admin: `PermissionsGuard` no encuentra el permiso en su rol.
   - `409 EmailAlreadyInUseError` — ya existe un usuario con ese email, incluido uno desactivado: `UsersService.create` lo busca con `withDeleted`.
   - `400 BAD_REQUEST` — el body no es JSON válido; lo rechaza el body parser de Express antes de llegar al `ValidationPipe`.
   - `422 UNPROCESSABLE_ENTITY` — body inválido según el DTO: `name` vacío, email con formato incorrecto, `isAdmin` ausente o no booleano, o campos extra no permitidos (incluido `password`).

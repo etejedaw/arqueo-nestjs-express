@@ -28,10 +28,9 @@ docs: |-
   primer admin de una instancia vacía lo crea la API al arrancar
   (`admin@arqueo.local`, con la contraseña en el log de arranque).
 
-  `AdminController` lleva `@Auth()` sobre la clase: exige sesión, pero todavía
-  no revisa el rol. Cualquier usuario logueado, admin o no, puede llamar a este
-  endpoint. Los permisos tienen que estar resueltos antes de cualquier
-  despliegue.
+  Lleva `@Auth("users:read")`: `JwtAuthGuard` exige sesión y después
+  `PermissionsGuard` exige el permiso `users:read`. Solo el rol `admin` lo
+  tiene, a través de `users:manage`; un usuario normal recibe 403.
 
   ## Response 200
   ```json
@@ -65,4 +64,5 @@ docs: |-
 
   ## Errors
   - `401 UNAUTHORIZED` — falta el header `Authorization`, el esquema no es `Bearer`, el token está mal formado, expiró o se firmó con otro secreto, o el usuario del token fue desactivado o borrado. Todos los casos responden igual.
+  - `403 FORBIDDEN` — el usuario del token no es admin: `PermissionsGuard` no encuentra el permiso en su rol.
   - `429 TOO_MANY_REQUESTS` — `ThrottlerGuard` global, más de 100 requests por minuto.
