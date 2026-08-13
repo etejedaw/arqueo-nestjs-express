@@ -17,17 +17,18 @@ import { User } from "./entities/user.entity";
 import { UserResponse } from "./responses/user.response";
 import { UsersService } from "./users.service";
 
-@Auth()
 @Controller("users")
 export class UsersController {
 	constructor(private readonly usersService: UsersService) {}
 
+	@Auth("profile:read")
 	@Serialize(UserResponse)
 	@Get("me")
 	getMe(@CurrentUser() user: AuthUser): AuthUser {
 		return user;
 	}
 
+	@Auth("profile:update")
 	@Serialize(UserResponse)
 	@Patch("me")
 	async updateMe(
@@ -37,6 +38,7 @@ export class UsersController {
 		return await this.usersService.update(user.id, updateProfileDto);
 	}
 
+	@Auth()
 	@HttpCode(HttpStatus.NO_CONTENT)
 	@Patch("me/password")
 	async changePassword(
