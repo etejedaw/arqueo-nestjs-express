@@ -39,7 +39,7 @@ async function respond(
 	} as unknown as ExecutionContext;
 	const next: CallHandler = { handle: () => of(value) };
 
-	return await lastValueFrom(interceptor.intercept(context, next));
+	return await lastValueFrom(await interceptor.intercept(context, next));
 }
 
 describe("Serialize", () => {
