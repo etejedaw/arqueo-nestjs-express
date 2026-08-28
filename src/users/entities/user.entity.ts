@@ -9,12 +9,12 @@ import {
 
 @Entity("users")
 export class User {
-	@PrimaryGeneratedColumn("uuid") declare id: string;
-	@Column() declare name: string;
-	@Column({ unique: true }) declare email: string;
-	@Column() declare password: string;
-	@Column({ type: "boolean", default: false }) declare isAdmin: boolean;
-	@CreateDateColumn({ type: "timestamptz" }) declare createdAt: Date;
-	@UpdateDateColumn({ type: "timestamptz" }) declare updatedAt: Date;
-	@DeleteDateColumn({ type: "timestamptz" }) declare deletedAt: Date | null;
+	@PrimaryGeneratedColumn("uuid") id: string;
+	@Column() name: string;
+	@Column({ unique: true }) email: string;
+	@Column() password: string;
+	@Column({ type: "boolean", default: false }) isAdmin: boolean;
+	@CreateDateColumn({ type: "timestamptz" }) createdAt: Date;
+	@UpdateDateColumn({ type: "timestamptz" }) updatedAt: Date;
+	@DeleteDateColumn({ type: "timestamptz" }) deletedAt: Date | null;
 }
