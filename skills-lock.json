@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "bruno-endpoints": {
+      "source": "etejedaw/workflow-skills",
+      "sourceType": "github",
+      "skillPath": "skills/bruno-endpoints/SKILL.md",
+      "computedHash": "5aa5498af353c408272f2dc8cafb45c179e90f796f4f8479590dfcb60e7f2e5b"
+    },
+    "git-commit": {
+      "source": "etejedaw/workflow-skills",
+      "sourceType": "github",
+      "skillPath": "skills/git-commit/SKILL.md",
+      "computedHash": "6e51b10c20abaf53fce0fbdb7802554396e0f0105825143b08fd171632d5d9a4"
+    },
+    "release-changelog": {
+      "source": "etejedaw/workflow-skills",
+      "sourceType": "github",
+      "skillPath": "skills/release-changelog/SKILL.md",
+      "computedHash": "b00d8e01a80a538a9e67c40c9465534ef8d9047930bda67fa78be7f7a5caa54b"
+    },
+    "typeorm-migration": {
+      "source": "etejedaw/workflow-skills",
+      "sourceType": "github",
+      "skillPath": "skills/typeorm-migration/SKILL.md",
+      "computedHash": "bbca1d94e8a93d431800b6f8e88cddf5509248e15b019dcd51d68a04eb97e58d"
+    }
+  }
+}
