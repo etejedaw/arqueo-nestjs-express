@@ -17,17 +17,6 @@ Léelos con `mcp__affine__export_doc_markdown` antes de empezar una fase nueva, 
 
 Al completar ítems del TODO, márcalos ahí (`update_block` con `checked`).
 
-## Skills del repo
-
-Se instalan desde `etejedaw/workflow-skills` con `npx skills add etejedaw/workflow-skills --skill <nombre>`. Lo que define este archivo manda sobre los valores por defecto de cada skill.
-
-| Skill               | Cuándo                                                                      |
-| ------------------- | --------------------------------------------------------------------------- |
-| `git-commit`        | Al commitear, cuando se pide                                                |
-| `bruno-endpoints`   | Cuando se crea, modifica o elimina un endpoint, para actualizar `docs/api/` |
-| `typeorm-migration` | Cuando un cambio en una entidad afecta el esquema de la base                |
-| `release-changelog` | Al completar una feature o antes de un paso a productivo                    |
-
 ## Migraciones
 
 Configuración que usa `typeorm-migration`:
