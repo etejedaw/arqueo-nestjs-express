@@ -3,3 +3,6 @@ coverage
 package-lock.json
 .env*
 *.tsbuildinfo
+
+.claude/skills
+skills-lock.json
